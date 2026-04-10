@@ -388,6 +388,18 @@ function Landing({ data, onSelectMember, onAdminClick }) {
                     type="button"
                     onClick={() => {
                       setMenuOpen(false);
+                      onAdminClick();
+                    }}
+                    style={s.headerMenuItem}
+                    onMouseEnter={e => { e.currentTarget.style.background = c.surfaceAlt; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                  >
+                    管理后台
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
                       if (!isExporting && hasTasks) {
                         handleExportBoard();
                       }
@@ -398,6 +410,8 @@ function Landing({ data, onSelectMember, onAdminClick }) {
                       color: isExporting || !hasTasks ? c.textFaint : c.text,
                       cursor: isExporting || !hasTasks ? "not-allowed" : "pointer",
                     }}
+                    onMouseEnter={e => { if (!isExporting && hasTasks) e.currentTarget.style.background = c.surfaceAlt; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                   >
                     {isExporting ? "生成中..." : "导出为长图"}
                   </button>
@@ -514,28 +528,6 @@ function Landing({ data, onSelectMember, onAdminClick }) {
         </div>
       </div>
 
-      <div style={s.content}>
-        <button style={{
-          width: "100%",
-          padding: "14px 0",
-          background: "transparent",
-          border: `1px solid ${c.borderSub}`,
-          borderRadius: 10,
-          color: c.textFaint,
-          fontSize: "0.875rem",
-          fontFamily: "'Albert Sans', sans-serif",
-          fontWeight: 500,
-          cursor: "pointer",
-          marginTop: 24,
-          transition: "border-color 0.2s, color 0.2s",
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.color = c.accent; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = c.borderSub; e.currentTarget.style.color = c.textFaint; }}
-          onClick={onAdminClick}
-        >
-          管理后台
-        </button>
-      </div>
 
       {exportPreviewUrl && (
         <div style={s.previewOverlay}>
@@ -645,31 +637,35 @@ function StatusBoard({ data }) {
               padding: "12px 14px",
               background: c.surfaceAlt,
               borderRadius: 8,
+              display: "flex",
+              gap: 10,
             }}>
-              <div style={{
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                color: c.text,
-                fontFamily: "'Albert Sans', sans-serif",
-              }}>
-                <span style={{
-                  fontFamily: "'Bricolage Grotesque', serif",
-                  fontWeight: 700,
-                  color: c.accent,
-                  marginRight: 8,
-                  fontSize: "0.9375rem",
-                }}>{idx + 1}</span>
-                {t.name}
-              </div>
-              {t.desc && (
+              <span style={{
+                fontFamily: "'Bricolage Grotesque', serif",
+                fontWeight: 700,
+                color: c.accent,
+                fontSize: "0.9375rem",
+                flexShrink: 0,
+                minWidth: 16,
+                lineHeight: 1.4,
+              }}>{idx + 1}</span>
+              <div style={{ flex: 1 }}>
                 <div style={{
-                  fontSize: "0.8125rem",
-                  color: c.textMuted,
-                  marginTop: 4,
-                  lineHeight: 1.55,
-                  paddingLeft: 22,
-                }}>{t.desc}</div>
-              )}
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: c.text,
+                  fontFamily: "'Albert Sans', sans-serif",
+                  lineHeight: 1.4,
+                }}>{t.name}</div>
+                {t.desc && (
+                  <div style={{
+                    fontSize: "0.8125rem",
+                    color: c.textMuted,
+                    marginTop: 4,
+                    lineHeight: 1.55,
+                  }}>{t.desc}</div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -984,15 +980,15 @@ function AdminView({ data, refreshData, onBack }) {
                     <div key={t.id} style={{
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "space-between",
+                      gap: 12,
                       padding: "12px 0",
                       borderBottom: idx < week.tasks.length - 1 ? `1px solid ${c.borderSub}` : "none",
                     }}>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: "0.875rem", color: c.text }}>{t.name}</div>
                         {t.desc && <div style={{ fontSize: "0.8125rem", color: c.textMuted, marginTop: 2 }}>{t.desc}</div>}
                       </div>
-                      <button onClick={() => setDeleteTaskConfirm(t)} style={s.btnDanger}>删除</button>
+                      <button onClick={() => setDeleteTaskConfirm(t)} style={{ ...s.btnDanger, flexShrink: 0 }}>删除</button>
                     </div>
                   ))}
                 </div>
@@ -1002,7 +998,7 @@ function AdminView({ data, refreshData, onBack }) {
             <div style={s.card}>
               <SectionHeading>截止时间与规则</SectionHeading>
               <label style={s.label}>截止时间</label>
-              <input type="datetime-local" style={s.input} value={deadline} onChange={e => setDeadline(e.target.value)} />
+              <input type="datetime-local" style={s.input} value={deadline} onChange={e => setDeadline(e.target.value)} onClick={e => { try { e.currentTarget.showPicker(); } catch {} }} />
               <label style={s.label}>惩罚规则</label>
               <input style={s.input} placeholder="如：未按时提交每条50元红包" value={penalty} onChange={e => setPenalty(e.target.value)} />
               <button style={s.btnPrimary} onClick={publishWeek}>保存设置</button>
@@ -1204,14 +1200,6 @@ function MemberView({ data, refreshData, member, onBack }) {
                 ...s.card,
                 background: "linear-gradient(135deg, oklch(96% 0.018 75), oklch(91% 0.03 50))",
               }}>
-                <p style={{
-                  margin: "0 0 8px",
-                  fontSize: "0.75rem",
-                  color: c.accent,
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}>平安银行顶私顾问周看板</p>
                 <h3 style={{
                   margin: 0,
                   fontSize: "1.25rem",
@@ -1219,12 +1207,6 @@ function MemberView({ data, refreshData, member, onBack }) {
                   color: c.text,
                   fontFamily: "'Bricolage Grotesque', serif",
                 }}>{member} 的本周任务清单</h3>
-                <p style={{
-                  margin: "8px 0 0",
-                  fontSize: "0.8125rem",
-                  color: c.textMuted,
-                  lineHeight: 1.6,
-                }}>导出后可长按保存图片，适合在手机里直接转发或归档。</p>
               </div>
 
               {week.deadline && (
@@ -1330,16 +1312,15 @@ function MemberView({ data, refreshData, member, onBack }) {
                           {!isDone && (
                             <button
                               style={{
-                                ...s.btnPrimary,
-                                marginTop: 0,
-                                fontSize: "0.75rem",
-                                padding: "7px 14px",
-                                width: "auto",
-                                flexShrink: 0,
+                                width: 36, height: 36, borderRadius: "50%",
+                                background: c.success, border: "none",
+                                color: "#fff", fontSize: "1.1rem", lineHeight: 1,
+                                cursor: "pointer", flexShrink: 0,
+                                display: "flex", alignItems: "center", justifyContent: "center",
                               }}
                               onClick={() => markDone(t.id)}
                             >
-                              标记完成
+                              ✓
                             </button>
                           )}
                         </div>
@@ -1728,6 +1709,7 @@ const s = {
     fontSize: "0.875rem",
     fontWeight: 600,
     fontFamily: "'Albert Sans', sans-serif",
+    cursor: "pointer",
   },
 };
 
