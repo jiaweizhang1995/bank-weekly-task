@@ -810,6 +810,8 @@ function MemberView({ data, refreshData, member, onBack }) {
   const [exportPreviewUrl, setExportPreviewUrl] = useState("");
   const [exportBlob, setExportBlob] = useState(null);
   const [exportFileName, setExportFileName] = useState("");
+  const [shareHint, setShareHint] = useState("图片生成后会在这里预览，可长按保存");
+  const canUseWebShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   useEffect(() => {
     return () => {
@@ -828,6 +830,49 @@ function MemberView({ data, refreshData, member, onBack }) {
     } catch (e) { console.error("Mark done failed:", e); }
   };
 
+  const closeExportPreview = () => {
+    setExportPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+      return "";
+    });
+    setExportBlob(null);
+    setExportFileName("");
+    setShareHint("图片生成后会在这里预览，可长按保存");
+  };
+
+  const attemptShareExport = async (blobToShare = exportBlob, fileName = exportFileName) => {
+    if (!blobToShare || !canUseWebShare) {
+      setShareHint("当前浏览器不支持系统分享，请长按保存图片");
+      return false;
+    }
+
+    const shareFile = new File([blobToShare], fileName || `${member}-周工作看板.png`, {
+      type: blobToShare.type || "image/png",
+    });
+    const shareData = {
+      files: [shareFile],
+      title: `${member} 的周工作看板`,
+      text: "本周任务长图",
+    };
+
+    if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
+      setShareHint("当前浏览器不支持直接分享图片文件，请长按保存图片");
+      return false;
+    }
+
+    try {
+      await navigator.share(shareData);
+      setShareHint("已尝试打开系统分享，如未保存成功可返回后长按图片");
+      return true;
+    } catch (e) {
+      console.error("Share export failed:", e);
+      setShareHint("系统分享未完成，请长按保存图片");
+      return false;
+    }
+  };
+
   const handleExportBoard = async () => {
     if (isExporting || !captureRef.current) return;
 
@@ -837,6 +882,7 @@ function MemberView({ data, refreshData, member, onBack }) {
     setExportError("");
 
     try {
+      setShareHint("长图生成中，请稍候...");
       const width = Math.max(captureNode.scrollWidth, captureNode.offsetWidth);
       const height = Math.max(captureNode.scrollHeight, captureNode.offsetHeight);
       const canvas = await html2canvas(captureNode, {
@@ -863,9 +909,19 @@ function MemberView({ data, refreshData, member, onBack }) {
         }
         return objectUrl;
       });
+
+      setShareHint("长按保存图片，如浏览器支持会自动尝试系统分享");
+
+      if (canUseWebShare) {
+        await new Promise((resolve) => window.setTimeout(resolve, 80));
+        await attemptShareExport(blob, fileName);
+      } else {
+        setShareHint("当前浏览器不支持系统分享，请长按保存图片");
+      }
     } catch (e) {
       console.error("Export long image failed:", e);
       setExportError("长图生成失败，请稍后重试");
+      setShareHint("图片生成失败，请关闭后重试");
     } finally {
       setIsExporting(false);
     }
@@ -873,143 +929,260 @@ function MemberView({ data, refreshData, member, onBack }) {
 
   return (
     <Shell>
-      <Header title={`${member} 的任务`} onBack={onBack} />
-      <div ref={captureRef} style={s.content}>
-        {!hasTasks ? (
-          <div style={{ ...s.card, textAlign: "center", padding: "48px 18px" }}>
-            <p style={{
-              fontFamily: "'Bricolage Grotesque', serif",
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              color: c.text,
-              margin: "0 0 6px",
-            }}>本周暂无任务</p>
-            <p style={{ color: c.textMuted, fontSize: "0.875rem" }}>等待管理员发布新任务</p>
+      <Header
+        title={`${member} 的任务`}
+        onBack={onBack}
+        actionLabel={isExporting ? "生成中..." : "导出为长图"}
+        onAction={handleExportBoard}
+        actionDisabled={isExporting || !hasTasks}
+      />
+      <div style={s.content}>
+        {exportError && (
+          <div style={{
+            ...s.card,
+            background: c.dangerBg,
+            border: `1px solid oklch(82% 0.04 25)`,
+            color: c.danger,
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+          }}>
+            {exportError}
           </div>
-        ) : (
-          <>
-            {week.deadline && (
+        )}
+
+        {isExporting && (
+          <div style={{
+            ...s.card,
+            background: c.accentSoft,
+            border: `1px solid oklch(82% 0.04 50)`,
+            color: c.accent,
+          }}>
+            <div style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: 6 }}>正在生成长图</div>
+            <div style={{ fontSize: "0.8125rem", lineHeight: 1.6 }}>请稍候，生成完成后会自动弹出预览图层。</div>
+          </div>
+        )}
+
+        <div ref={captureRef} style={s.captureArea}>
+          {!hasTasks ? (
+            <div style={{ ...s.card, textAlign: "center", padding: "48px 18px", marginBottom: 0 }}>
+              <p style={{
+                fontFamily: "'Bricolage Grotesque', serif",
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                color: c.text,
+                margin: "0 0 6px",
+              }}>本周暂无任务</p>
+              <p style={{ color: c.textMuted, fontSize: "0.875rem" }}>等待管理员发布新任务</p>
+            </div>
+          ) : (
+            <>
               <div style={{
                 ...s.card,
-                background: c.dangerBg,
-                border: `1px solid oklch(82% 0.04 25)`,
+                background: "linear-gradient(135deg, oklch(96% 0.018 75), oklch(91% 0.03 50))",
               }}>
                 <p style={{
-                  margin: 0,
-                  fontSize: "0.8125rem",
-                  color: c.danger,
-                  fontWeight: 600,
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  截止: {new Date(week.deadline).toLocaleString("zh-CN")}
-                  <CountDown deadline={week.deadline} />
-                </p>
-                {week.penalty && (
-                  <p style={{ margin: "6px 0 0", fontSize: "0.75rem", color: c.warning, fontWeight: 500 }}>
-                    {"惩罚：" + week.penalty}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {week.announcement && (
-              <div style={{
-                ...s.card,
-                background: c.warningBg,
-                border: `1px solid oklch(80% 0.04 70)`,
-              }}>
-                <div style={{
-                  fontFamily: "'Bricolage Grotesque', serif",
+                  margin: "0 0 8px",
+                  fontSize: "0.75rem",
+                  color: c.accent,
                   fontWeight: 700,
-                  fontSize: "0.875rem",
-                  color: c.warning,
-                  marginBottom: 8,
-                }}>本周重点通知</div>
-                <div style={{
-                  fontSize: "0.875rem",
-                  color: c.textSec,
-                  lineHeight: 1.65,
-                  whiteSpace: "pre-wrap",
-                }}>{week.announcement}</div>
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}>平安银行顶私顾问周看板</p>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: "1.25rem",
+                  lineHeight: 1.2,
+                  color: c.text,
+                  fontFamily: "'Bricolage Grotesque', serif",
+                }}>{member} 的本周任务清单</h3>
+                <p style={{
+                  margin: "8px 0 0",
+                  fontSize: "0.8125rem",
+                  color: c.textMuted,
+                  lineHeight: 1.6,
+                }}>导出后可长按保存图片，适合在手机里直接转发或归档。</p>
               </div>
-            )}
 
-            <div style={s.card}>
-              <SectionHeading>本周任务</SectionHeading>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {week.tasks.map(t => {
-                  const val = (week.status || {})[member]?.[t.id];
-                  const isDone = val === "done";
-                  const isRejected = val === "rejected";
+              {week.deadline && (
+                <div style={{
+                  ...s.card,
+                  background: c.dangerBg,
+                  border: `1px solid oklch(82% 0.04 25)`,
+                }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: "0.8125rem",
+                    color: c.danger,
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    截止: {new Date(week.deadline).toLocaleString("zh-CN")}
+                    <CountDown deadline={week.deadline} />
+                  </p>
+                  {week.penalty && (
+                    <p style={{ margin: "6px 0 0", fontSize: "0.75rem", color: c.warning, fontWeight: 500 }}>
+                      {"惩罚：" + week.penalty}
+                    </p>
+                  )}
+                </div>
+              )}
 
-                  let itemBg = c.surfaceAlt;
-                  let itemBorder = "transparent";
-                  if (isDone) { itemBg = c.successBg; itemBorder = `oklch(82% 0.04 155)`; }
-                  if (isRejected) { itemBg = c.dangerBg; itemBorder = `oklch(82% 0.04 25)`; }
+              {week.announcement && (
+                <div style={{
+                  ...s.card,
+                  background: c.warningBg,
+                  border: `1px solid oklch(80% 0.04 70)`,
+                }}>
+                  <div style={{
+                    fontFamily: "'Bricolage Grotesque', serif",
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    color: c.warning,
+                    marginBottom: 8,
+                  }}>本周重点通知</div>
+                  <div style={{
+                    fontSize: "0.875rem",
+                    color: c.textSec,
+                    lineHeight: 1.65,
+                    whiteSpace: "pre-wrap",
+                  }}>{week.announcement}</div>
+                </div>
+              )}
 
-                  return (
-                    <div key={t.id} style={{
-                      background: itemBg,
-                      borderRadius: 10,
-                      padding: "14px 16px",
-                      border: `1px solid ${itemBorder}`,
-                    }}>
-                      <div style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        justifyContent: "space-between",
-                        gap: 12,
+              <div style={{ ...s.card, marginBottom: 0 }}>
+                <SectionHeading>本周任务</SectionHeading>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {week.tasks.map(t => {
+                    const val = (week.status || {})[member]?.[t.id];
+                    const isDone = val === "done";
+                    const isRejected = val === "rejected";
+
+                    let itemBg = c.surfaceAlt;
+                    let itemBorder = "transparent";
+                    if (isDone) { itemBg = c.successBg; itemBorder = `oklch(82% 0.04 155)`; }
+                    if (isRejected) { itemBg = c.dangerBg; itemBorder = `oklch(82% 0.04 25)`; }
+
+                    return (
+                      <div key={t.id} style={{
+                        background: itemBg,
+                        borderRadius: 10,
+                        padding: "14px 16px",
+                        border: `1px solid ${itemBorder}`,
                       }}>
-                        <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10 }}>
-                          <div style={{ paddingTop: 1 }}>
-                            <StatusDot val={val} />
+                        <div style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          gap: 12,
+                        }}>
+                          <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                            <div style={{ paddingTop: 1 }}>
+                              <StatusDot val={val} />
+                            </div>
+                            <div>
+                              <span style={{
+                                fontWeight: 600,
+                                fontSize: "0.875rem",
+                                color: isDone ? c.success : isRejected ? c.danger : c.text,
+                              }}>{t.name}</span>
+                              {t.desc && (
+                                <div style={{
+                                  fontSize: "0.8125rem",
+                                  color: c.textMuted,
+                                  marginTop: 4,
+                                  lineHeight: 1.55,
+                                }}>{t.desc}</div>
+                              )}
+                              {isRejected && (
+                                <div style={{
+                                  fontSize: "0.75rem",
+                                  color: c.danger,
+                                  marginTop: 4,
+                                  fontWeight: 500,
+                                }}>被管理员打回，请重新提交</div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <span style={{
-                              fontWeight: 600,
-                              fontSize: "0.875rem",
-                              color: isDone ? c.success : isRejected ? c.danger : c.text,
-                            }}>{t.name}</span>
-                            {t.desc && (
-                              <div style={{
-                                fontSize: "0.8125rem",
-                                color: c.textMuted,
-                                marginTop: 4,
-                                lineHeight: 1.55,
-                              }}>{t.desc}</div>
-                            )}
-                            {isRejected && (
-                              <div style={{
+                          {!isDone && (
+                            <button
+                              style={{
+                                ...s.btnPrimary,
+                                marginTop: 0,
                                 fontSize: "0.75rem",
-                                color: c.danger,
-                                marginTop: 4,
-                                fontWeight: 500,
-                              }}>被管理员打回，请重新提交</div>
-                            )}
-                          </div>
+                                padding: "7px 14px",
+                                width: "auto",
+                                flexShrink: 0,
+                              }}
+                              onClick={() => markDone(t.id)}
+                            >
+                              标记完成
+                            </button>
+                          )}
                         </div>
-                        {!isDone && (
-                          <button
-                            style={{
-                              ...s.btnPrimary,
-                              marginTop: 0,
-                              fontSize: "0.75rem",
-                              padding: "7px 14px",
-                              width: "auto",
-                              flexShrink: 0,
-                            }}
-                            onClick={() => markDone(t.id)}
-                          >
-                            标记完成
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {exportPreviewUrl && (
+          <div style={s.previewOverlay}>
+            <div style={s.previewCard}>
+              <div style={s.previewHeader}>
+                <div>
+                  <div style={{
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: c.text,
+                    fontFamily: "'Bricolage Grotesque', serif",
+                  }}>长图预览</div>
+                  <div style={{
+                    marginTop: 4,
+                    fontSize: "0.8125rem",
+                    color: c.textMuted,
+                    lineHeight: 1.6,
+                  }}>{shareHint}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeExportPreview}
+                  style={s.previewCloseButton}
+                >
+                  关闭
+                </button>
+              </div>
+
+              <div style={s.previewImageWrap}>
+                <img
+                  src={exportPreviewUrl}
+                  alt={`${member} 的周工作看板长图`}
+                  style={s.previewImage}
+                />
+              </div>
+
+              <div style={s.previewActions}>
+                {canUseWebShare && (
+                  <button
+                    type="button"
+                    onClick={() => attemptShareExport()}
+                    style={{ ...s.btnPrimary, marginTop: 0, width: "auto", padding: "10px 18px" }}
+                  >
+                    系统分享
+                  </button>
+                )}
+                <a
+                  href={exportPreviewUrl}
+                  download={exportFileName || `${member}-周工作看板.png`}
+                  style={s.previewDownloadLink}
+                >
+                  下载图片
+                </a>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </Shell>
@@ -1017,7 +1190,7 @@ function MemberView({ data, refreshData, member, onBack }) {
 }
 
 /* =================== Shared Components =================== */
-function Header({ title, onBack }) {
+function Header({ title, onBack, actionLabel, onAction, actionDisabled }) {
   return (
     <div style={{
       display: "flex",
@@ -1040,13 +1213,40 @@ function Header({ title, onBack }) {
           <path d="M13 4L7 10L13 16" />
         </svg>
       </button>
-      <h2 style={{
-        margin: 0,
-        fontSize: "1.0625rem",
-        fontWeight: 700,
-        color: c.text,
-        fontFamily: "'Bricolage Grotesque', serif",
-      }}>{title}</h2>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h2 style={{
+          margin: 0,
+          fontSize: "1.0625rem",
+          fontWeight: 700,
+          color: c.text,
+          fontFamily: "'Bricolage Grotesque', serif",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}>{title}</h2>
+      </div>
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          disabled={actionDisabled}
+          style={{
+            border: "none",
+            background: actionDisabled ? c.borderSub : c.accent,
+            color: actionDisabled ? c.textFaint : "#fff",
+            borderRadius: 999,
+            padding: "9px 14px",
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            fontFamily: "'Albert Sans', sans-serif",
+            cursor: actionDisabled ? "not-allowed" : "pointer",
+            whiteSpace: "nowrap",
+            transition: "background 0.2s",
+          }}
+        >
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }
@@ -1108,6 +1308,11 @@ const s = {
   },
   content: {
     padding: "20px 20px 48px",
+  },
+  captureArea: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
   },
   card: {
     background: c.surface,
@@ -1202,6 +1407,83 @@ const s = {
     boxShadow: "0 18px 48px oklch(24% 0.02 55 / 0.22)",
     textAlign: "center",
     backdropFilter: "blur(8px)",
+  },
+  previewOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "oklch(22% 0.02 55 / 0.72)",
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    padding: "24px 16px",
+    zIndex: 1200,
+    backdropFilter: "blur(10px)",
+  },
+  previewCard: {
+    width: "100%",
+    maxWidth: 460,
+    maxHeight: "85vh",
+    background: c.surface,
+    borderRadius: 20,
+    padding: 18,
+    boxSizing: "border-box",
+    boxShadow: "0 24px 64px oklch(22% 0.02 55 / 0.22)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+  },
+  previewHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  previewCloseButton: {
+    border: "none",
+    background: c.surfaceAlt,
+    color: c.text,
+    borderRadius: 999,
+    padding: "9px 14px",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    fontFamily: "'Albert Sans', sans-serif",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  previewImageWrap: {
+    overflow: "auto",
+    borderRadius: 16,
+    border: `1px solid ${c.border}`,
+    background: c.bg,
+    padding: 8,
+  },
+  previewImage: {
+    display: "block",
+    width: "100%",
+    height: "auto",
+    borderRadius: 12,
+  },
+  previewActions: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  previewDownloadLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 40,
+    padding: "0 16px",
+    borderRadius: 999,
+    border: `1px solid ${c.border}`,
+    color: c.text,
+    textDecoration: "none",
+    fontSize: "0.8125rem",
+    fontWeight: 600,
+    fontFamily: "'Albert Sans', sans-serif",
+    background: c.surfaceAlt,
   },
 };
 
