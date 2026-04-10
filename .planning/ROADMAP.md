@@ -43,9 +43,10 @@ Plans:
   4. GET /members returns current member list without any token
   5. Admin can add a member (POST /members) and the member appears in subsequent GET /members
   6. Admin can delete a member (DELETE /members/{name}) and the member is gone from subsequent GET /members
-**Plans:** 1 plan
+**Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
+- [ ] 02-01-PLAN.md — Auth middleware, admin login, and PIN change endpoints
+- [ ] 02-02-PLAN.md — Member CRUD endpoints (list, add, delete)
 
 ### Phase 3: Weekly API
 **Goal**: All weekly data endpoints work — members can view tasks and mark completion, admin can manage tasks and settings
@@ -85,6 +86,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 1/1 | ✓ Complete | 2026-04-10 |
-| 2. Auth & Members | 0/? | Not started | - |
+| 2. Auth & Members | 0/2 | Not started | - |
 | 3. Weekly API | 0/? | Not started | - |
 | 4. Integration | 0/? | Not started | - |
