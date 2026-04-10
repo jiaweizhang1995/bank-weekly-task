@@ -28,7 +28,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. data.json is created with default structure on first run if it does not exist
   3. Server reads existing data.json on restart without data loss
   4. A health-check request returns a 200 response confirming the server is alive
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
 
 ### Phase 2: Auth & Members
 **Goal**: Admin can authenticate with a PIN and receive a token; admin can manage team members via API
@@ -41,7 +43,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. GET /members returns current member list without any token
   5. Admin can add a member (POST /members) and the member appears in subsequent GET /members
   6. Admin can delete a member (DELETE /members/{name}) and the member is gone from subsequent GET /members
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
 
 ### Phase 3: Weekly API
 **Goal**: All weekly data endpoints work — members can view tasks and mark completion, admin can manage tasks and settings
@@ -54,7 +58,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Admin can add a task (POST /week/tasks) and delete it (DELETE /week/tasks/{taskId}); GET /week reflects changes
   5. Member can mark own task done (PUT /week/tasks/{taskId}/status/{member} with status=done); admin can reject (status=rejected) or reset (status=null)
   6. Admin POST /week/reset returns all task statuses to null and clears announcement/settings to defaults
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
 
 ### Phase 4: Integration
 **Goal**: Express serves the built frontend as static files, and the frontend uses the API instead of localStorage — one server, one URL, fully working app
@@ -64,7 +70,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Visiting the server URL in a browser loads the React app without a separate dev server
   2. Selecting a member name and marking a task done persists after a browser refresh (data comes from API, not localStorage)
   3. Admin login, task management, and weekly reset all work end-to-end through the API in the browser
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
 **UI hint**: yes
 
 ## Progress
