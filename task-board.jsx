@@ -191,6 +191,19 @@ function Landing({ data, onSelectMember, onAdminClick }) {
           marginTop: 8,
           lineHeight: 1.5,
         }}>选择你的名字进入</p>
+        <p style={{
+          fontFamily: "'Albert Sans', sans-serif",
+          fontSize: "0.8125rem",
+          color: c.textMuted,
+          margin: "8px 0 0",
+          fontVariantNumeric: "tabular-nums",
+        }}>
+          {(() => {
+            const d = new Date();
+            const days = ["日", "一", "二", "三", "四", "五", "六"];
+            return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${days[d.getDay()]}`;
+          })()}
+        </p>
       </div>
 
       <div style={s.content}>
@@ -325,7 +338,7 @@ function StatusBoard({ data }) {
         <SectionHeading>本周重点任务</SectionHeading>
         {week.penalty && (
           <p style={{ fontSize: "0.75rem", color: c.warning, margin: "0 0 8px", fontWeight: 500 }}>
-            {week.penalty}
+            {"惩罚：" + week.penalty}
           </p>
         )}
         {week.deadline && (
@@ -384,7 +397,7 @@ function StatusBoard({ data }) {
               <tr>
                 <th style={s.th}>姓名</th>
                 {week.tasks.map((t, idx) => (
-                  <th key={t.id} style={{ ...s.th, textAlign: "center" }}>任务{idx + 1}</th>
+                  <th key={t.id} style={{ ...s.th, textAlign: "center", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</th>
                 ))}
               </tr>
             </thead>
@@ -463,15 +476,14 @@ function CountDown({ deadline }) {
 
   const diff = new Date(deadline).getTime() - now;
   if (diff <= 0) return <span style={{ color: c.danger, marginLeft: 8, fontWeight: 600 }}>已截止</span>;
-  const hours = Math.floor(diff / 3600000);
-  const mins = Math.floor((diff % 3600000) / 60000);
+  const days = Math.ceil(diff / 86400000);
   return (
     <span style={{
       marginLeft: 8,
-      color: hours < 12 ? c.danger : c.warning,
+      color: days <= 1 ? c.danger : c.warning,
       fontWeight: 600,
     }}>
-      剩余 {hours}h {mins}m
+      剩余 {days}天
     </span>
   );
 }
@@ -802,7 +814,7 @@ function MemberView({ data, refreshData, member, onBack }) {
                 </p>
                 {week.penalty && (
                   <p style={{ margin: "6px 0 0", fontSize: "0.75rem", color: c.warning, fontWeight: 500 }}>
-                    {week.penalty}
+                    {"惩罚：" + week.penalty}
                   </p>
                 )}
               </div>
