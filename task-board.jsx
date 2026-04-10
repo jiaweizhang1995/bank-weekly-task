@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-
-const STORAGE_KEY = "taskboard-data";
-
-const defaultData = {
-  adminPin: "8888",
-  members: ["李卓", "晋华", "珊珊", "晓梅", "张伟"],
-  tasks: [],
-  currentWeek: null,
-};
+import api from './src/api.js';
 
 /* =================== Color Tokens (OKLCH Warm Linen) =================== */
 const c = {
@@ -55,35 +47,35 @@ function FontLoader() {
 
 /* =================== App =================== */
 function App() {
-  const [data, setData] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [week, setWeek] = useState({ tasks: [], status: {}, penalty: "", deadline: "", announcement: "" });
   const [view, setView] = useState("landing");
   const [currentMember, setCurrentMember] = useState(null);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const result = await window.storage.get(STORAGE_KEY, true);
-        setData(result ? JSON.parse(result.value) : defaultData);
-      } catch {
-        setData(defaultData);
-      }
-      setLoading(false);
-    })();
-  }, []);
-
-  const saveData = useCallback(async (newData) => {
-    setData(newData);
+  const refreshData = useCallback(async () => {
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(newData), true);
+      const [membersData, weekData] = await Promise.all([
+        api.getMembers(),
+        api.getWeek()
+      ]);
+      setMembers(membersData);
+      setWeek(weekData);
     } catch (e) {
-      console.error("Save failed:", e);
+      console.error("Failed to load data:", e);
     }
   }, []);
 
-  if (loading || !data) return <LoadingScreen />;
+  useEffect(() => {
+    refreshData().then(() => setLoading(false));
+  }, [refreshData]);
+
+  // Build a data object matching the shape components expect
+  const data = { members, currentWeek: week };
+
+  if (loading) return <LoadingScreen />;
 
   if (view === "landing") {
     return (
@@ -106,10 +98,15 @@ function App() {
               type="password"
               value={pinInput}
               onChange={e => { setPinInput(e.target.value); setPinError(false); }}
-              onKeyDown={e => {
+              onKeyDown={async e => {
                 if (e.key === "Enter") {
-                  if (pinInput === data.adminPin) { setView("admin"); setPinInput(""); }
-                  else setPinError(true);
+                  try {
+                    await api.login(pinInput);
+                    setView("admin");
+                    setPinInput("");
+                  } catch {
+                    setPinError(true);
+                  }
                 }
               }}
               style={{ ...s.input, borderColor: pinError ? c.danger : c.border }}
@@ -119,9 +116,14 @@ function App() {
             {pinError && <p style={{ color: c.danger, fontSize: "0.8125rem", marginTop: 8 }}>密码错误</p>}
             <button
               style={s.btnPrimary}
-              onClick={() => {
-                if (pinInput === data.adminPin) { setView("admin"); setPinInput(""); }
-                else setPinError(true);
+              onClick={async () => {
+                try {
+                  await api.login(pinInput);
+                  setView("admin");
+                  setPinInput("");
+                } catch {
+                  setPinError(true);
+                }
               }}
             >
               进入管理后台
@@ -133,11 +135,11 @@ function App() {
   }
 
   if (view === "admin") {
-    return <AdminView data={data} saveData={saveData} onBack={() => setView("landing")} />;
+    return <AdminView data={data} refreshData={refreshData} onBack={() => { api.logout(); setView("landing"); }} />;
   }
 
   if (view === "member") {
-    return <MemberView data={data} saveData={saveData} member={currentMember} onBack={() => { setView("landing"); setCurrentMember(null); }} />;
+    return <MemberView data={data} refreshData={refreshData} member={currentMember} onBack={() => { setView("landing"); setCurrentMember(null); }} />;
   }
 
   return null;
@@ -475,7 +477,7 @@ function CountDown({ deadline }) {
 }
 
 /* =================== Admin View =================== */
-function AdminView({ data, saveData, onBack }) {
+function AdminView({ data, refreshData, onBack }) {
   const [tab, setTab] = useState("tasks");
   const [taskName, setTaskName] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
@@ -495,62 +497,81 @@ function AdminView({ data, saveData, onBack }) {
     }
   }, []);
 
-  const publishWeek = () => {
-    const updated = { ...data, currentWeek: { ...week, deadline, penalty, announcement } };
-    saveData(updated);
+  const publishWeek = async () => {
+    try {
+      await api.updateAnnouncement(announcement);
+      await api.updateSettings({ deadline, penalty });
+      await refreshData();
+    } catch (e) { console.error("Publish failed:", e); }
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!taskName.trim()) return;
-    const t = { id: Date.now().toString(), name: taskName.trim(), desc: taskDesc.trim() };
-    const newWeek = { ...week, tasks: [...(week.tasks || []), t] };
-    saveData({ ...data, currentWeek: newWeek });
-    setTaskName("");
-    setTaskDesc("");
+    try {
+      await api.addTask(taskName.trim(), taskDesc.trim());
+      await refreshData();
+      setTaskName("");
+      setTaskDesc("");
+    } catch (e) { console.error("Add task failed:", e); }
   };
 
-  const removeTask = (id) => {
-    const newTasks = week.tasks.filter(t => t.id !== id);
-    const newStatus = { ...week.status };
-    Object.keys(newStatus).forEach(name => {
-      if (newStatus[name]) {
-        const copy = { ...newStatus[name] };
-        delete copy[id];
-        newStatus[name] = copy;
-      }
-    });
-    saveData({ ...data, currentWeek: { ...week, tasks: newTasks, status: newStatus } });
+  const removeTask = async (id) => {
+    try {
+      await api.deleteTask(id);
+      await refreshData();
+    } catch (e) { console.error("Remove task failed:", e); }
   };
 
-  const resetWeek = () => {
-    saveData({ ...data, currentWeek: { tasks: [], status: {}, penalty: "", deadline: "", announcement: "" } });
+  const resetWeek = async () => {
+    try {
+      await api.resetWeek();
+      await refreshData();
+      setDeadline("");
+      setPenalty("");
+      setAnnouncement("");
+    } catch (e) { console.error("Reset failed:", e); }
   };
 
-  const toggleStatus = (member, taskId) => {
-    const newStatus = { ...week.status };
-    if (!newStatus[member]) newStatus[member] = {};
-    const cur = newStatus[member][taskId];
-    if (cur === "done") newStatus[member][taskId] = "rejected";
-    else if (cur === "rejected") newStatus[member][taskId] = null;
-    else newStatus[member][taskId] = "done";
-    saveData({ ...data, currentWeek: { ...week, status: newStatus } });
+  const toggleStatus = async (member, taskId) => {
+    const st = (week.status || {})[member];
+    const cur = st ? st[taskId] : null;
+    let newStatus;
+    if (cur === "done") newStatus = "rejected";
+    else if (cur === "rejected") newStatus = null;
+    else newStatus = "done";
+    try {
+      await api.updateStatus(taskId, member, newStatus);
+      await refreshData();
+    } catch (e) { console.error("Toggle status failed:", e); }
   };
 
-  const addMember = () => {
+  const addMember = async () => {
     if (!newMember.trim() || data.members.includes(newMember.trim())) return;
-    saveData({ ...data, members: [...data.members, newMember.trim()] });
-    setNewMember("");
+    try {
+      await api.addMember(newMember.trim());
+      await refreshData();
+      setNewMember("");
+    } catch (e) { console.error("Add member failed:", e); }
   };
 
-  const removeMember = (name) => {
-    saveData({ ...data, members: data.members.filter(m => m !== name) });
+  const removeMember = async (name) => {
+    try {
+      await api.deleteMember(name);
+      await refreshData();
+    } catch (e) { console.error("Remove member failed:", e); }
   };
 
-  const changePin = () => {
+  const changePin = async () => {
     if (newPin.length >= 4) {
-      saveData({ ...data, adminPin: newPin });
-      setNewPin("");
-      alert("密码已更新");
+      try {
+        const oldPin = prompt("请输入当前密码");
+        if (!oldPin) return;
+        await api.changePin(oldPin, newPin);
+        setNewPin("");
+        alert("密码已更新");
+      } catch (e) {
+        alert(e.message || "密码更新失败");
+      }
     }
   };
 
@@ -733,16 +754,17 @@ function AdminView({ data, saveData, onBack }) {
 }
 
 /* =================== Member View =================== */
-function MemberView({ data, saveData, member, onBack }) {
+function MemberView({ data, refreshData, member, onBack }) {
   const week = data.currentWeek;
   const hasTasks = week && week.tasks && week.tasks.length > 0;
 
   const markDone = async (taskId) => {
-    const newStatus = { ...(week.status || {}) };
-    if (!newStatus[member]) newStatus[member] = {};
-    if (newStatus[member][taskId] === "done") return;
-    newStatus[member][taskId] = "done";
-    await saveData({ ...data, currentWeek: { ...week, status: newStatus } });
+    const st = (week.status || {})[member];
+    if (st && st[taskId] === "done") return;
+    try {
+      await api.updateStatus(taskId, member, "done");
+      await refreshData();
+    } catch (e) { console.error("Mark done failed:", e); }
   };
 
   return (
