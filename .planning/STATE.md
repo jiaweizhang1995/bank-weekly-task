@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-10T17:40:24.000Z"
+stopped_at: Completed quick task 260411-2hv
+last_updated: "2026-04-10T17:54:24.000Z"
 last_activity: 2026-04-11
 progress:
   total_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 Phase: 04 (integration) — EXECUTING
 Plan: 3 of 3
 Status: Phase complete — ready for verification
-Last activity: 2026-04-11 - Completed quick task 260411-29x: 当前管理后台界面点击保存设置界面想要在界面中央弹出“保存成功”的提示。把首页周工作看板下面的“选择你的名字进入”删掉。然后把weekly task board 改成“平安银行顶私顾问周看板”
+Last activity: 2026-04-11 - Completed quick task 260411-2hv: 为成员周工作看板增加导出长图、预览遮罩层和 Web Share 回退能力
 
 Progress: [██░░░░░░░░] 25%
 
@@ -82,6 +82,7 @@ Recent decisions affecting current work:
 - [Phase 04-01]: Express 5 named wildcard /{*splat} for SPA fallback (path-to-regexp v8 requires named params)
 - [Phase 04-integration]: Admin token in module-level variable (session-scoped), refreshData() pattern for all mutations, changePin uses prompt() for old PIN
 - [Phase 04-integration]: appleboy/ssh-action@v1 for GitHub Actions SSH deploy to ECS; pm2 with 256M memory limit for process management
+- [Quick 260411-2hv]: Member board export uses a right-top ☰ menu entry, preview-first html2canvas-pro capture, and best-effort Web Share fallback
 
 ### Pending Todos
 
@@ -97,9 +98,10 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260411-1xg | UI优化：日期显示、任务名称、保存按钮、惩罚前缀、剩余天数 | 2026-04-11 | 2a760ff | [260411-1xg-ui](./quick/260411-1xg-ui/) |
 | 260411-29x | 当前管理后台界面点击保存设置界面想要在界面中央弹出“保存成功”的提示。把首页周工作看板下面的“选择你的名字进入”删掉。然后把weekly task board 改成“平安银行顶私顾问周看板” | 2026-04-11 | ece9fb0 | [260411-29x-weekly-task-board](./quick/260411-29x-weekly-task-board/) |
+| 260411-2hv | 为成员周工作看板增加导出长图能力，使用 html2canvas-pro 生成长图并提供预览遮罩层与 Web Share 回退 | 2026-04-11 | f7fc2f3 | [260411-2hv-html2canvas-pro-web-share-api](./quick/260411-2hv-html2canvas-pro-web-share-api/) |
 
 ## Session Continuity
 
-Last session: 2026-04-10T16:52:36.666Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-04-10T17:54:24.000Z
+Stopped at: Completed quick task 260411-2hv
 Resume file: None
