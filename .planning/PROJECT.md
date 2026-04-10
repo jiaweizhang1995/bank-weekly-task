@@ -19,21 +19,21 @@ Members can see their weekly tasks and mark them done, and the admin can manage 
 - ✓ Status board showing all members' completion — existing frontend
 - ✓ Weekly reset functionality — existing frontend
 - ✓ OKLCH design system with Chinese UI — existing frontend
+- ✓ Backend API server (Node.js + Express) — Validated in Phase 1: Foundation
+- ✓ JSON file-based data persistence — Validated in Phase 1: Foundation
+- ✓ Admin PIN authentication with token (POST /admin/login) — Validated in Phase 2: Auth & Members
+- ✓ Admin PIN change (PUT /admin/pin) — Validated in Phase 2: Auth & Members
+- ✓ Role-based access: admin via token, members via name parameter — Validated in Phase 2: Auth & Members
+- ✓ Member management endpoints (GET/POST/DELETE /members) — Validated in Phase 2: Auth & Members
 
 ### Active
 
-- [ ] Backend API server (Node.js + Express)
-- [ ] JSON file-based data persistence
-- [ ] Member management endpoints (GET/POST/DELETE /members)
 - [ ] Weekly data endpoint (GET /week) returning complete week structure
 - [ ] Announcement management (PUT /week/announcement)
 - [ ] Settings management (PUT /week/settings — deadline, penalty)
 - [ ] Task CRUD (POST/DELETE /week/tasks)
 - [ ] Task status updates with role-based logic (PUT /week/tasks/{taskId}/status/{member})
 - [ ] Weekly reset endpoint (POST /week/reset)
-- [ ] Admin PIN authentication with token (POST /admin/login)
-- [ ] Admin PIN change (PUT /admin/pin)
-- [ ] Role-based access: admin via token, members via name parameter
 - [ ] Express serves built frontend static files (same server deployment)
 - [ ] CORS configured for same-origin serving
 
@@ -70,10 +70,10 @@ Members can see their weekly tasks and mark them done, and the admin can manage 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Express + JSON file over database | Data is tiny, no relations needed, simplest possible persistence | — Pending |
-| Same-server deployment (frontend + backend) | Avoids CORS complexity, single deployment target | — Pending |
-| Token-based admin auth (not session) | Stateless, simple to implement with Express | — Pending |
-| Members identified by name, no auth | Team is small and trusted, no need for accounts | — Pending |
+| Express + JSON file over database | Data is tiny, no relations needed, simplest possible persistence | Validated Phase 1 |
+| Same-server deployment (frontend + backend) | Avoids CORS complexity, single deployment target | Validated Phase 1 |
+| Token-based admin auth (not session) | Stateless, simple to implement with Express | Validated Phase 2 |
+| Members identified by name, no auth | Team is small and trusted, no need for accounts | Validated Phase 2 |
 
 ## Evolution
 
@@ -93,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after initialization*
+*Last updated: 2026-04-10 after Phase 2 completion*
