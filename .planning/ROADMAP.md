@@ -78,7 +78,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Express serves Vite-built frontend as static files with SPA fallback
 - [x] 04-02-PLAN.md — Refactor frontend from localStorage to API calls
-- [ ] 04-03-PLAN.md — GitHub Actions CI/CD pipeline and end-to-end verification
+- [x] 04-03-PLAN.md — GitHub Actions CI/CD pipeline and end-to-end verification
 **UI hint**: yes
 
 ## Progress
