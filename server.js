@@ -1,5 +1,6 @@
 import express from 'express';
 import { loadData, getData } from './data/store.js';
+import adminRoutes from './routes/admin.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,9 @@ app.get('/api/health', (req, res) => {
     dataLoaded: data !== null,
   });
 });
+
+// Admin routes
+app.use('/api/admin', adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
