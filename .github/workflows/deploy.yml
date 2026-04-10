@@ -16,6 +16,8 @@ jobs:
           password: ${{ secrets.ECS_PASSWORD }}
           port: 22
           script: |
+            set -e
+            git config --global --add safe.directory /var/www/bank-weekly-task
             cd /var/www/bank-weekly-task
             git pull origin main
             npm install
