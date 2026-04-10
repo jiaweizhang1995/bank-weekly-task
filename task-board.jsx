@@ -932,9 +932,13 @@ function MemberView({ data, refreshData, member, onBack }) {
       <Header
         title={`${member} 的任务`}
         onBack={onBack}
-        actionLabel={isExporting ? "生成中..." : "导出为长图"}
-        onAction={handleExportBoard}
-        actionDisabled={isExporting || !hasTasks}
+        menuItems={[
+          {
+            label: isExporting ? "生成中..." : "导出为长图",
+            onClick: handleExportBoard,
+            disabled: isExporting || !hasTasks,
+          },
+        ]}
       />
       <div style={s.content}>
         {exportError && (
@@ -1190,9 +1194,13 @@ function MemberView({ data, refreshData, member, onBack }) {
 }
 
 /* =================== Shared Components =================== */
-function Header({ title, onBack, actionLabel, onAction, actionDisabled }) {
+function Header({ title, onBack, menuItems = [] }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const hasMenu = menuItems.length > 0;
+
   return (
     <div style={{
+      position: "relative",
       display: "flex",
       alignItems: "center",
       gap: 12,
@@ -1225,27 +1233,50 @@ function Header({ title, onBack, actionLabel, onAction, actionDisabled }) {
           textOverflow: "ellipsis",
         }}>{title}</h2>
       </div>
-      {actionLabel && onAction && (
-        <button
-          type="button"
-          onClick={onAction}
-          disabled={actionDisabled}
-          style={{
-            border: "none",
-            background: actionDisabled ? c.borderSub : c.accent,
-            color: actionDisabled ? c.textFaint : "#fff",
-            borderRadius: 999,
-            padding: "9px 14px",
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            fontFamily: "'Albert Sans', sans-serif",
-            cursor: actionDisabled ? "not-allowed" : "pointer",
-            whiteSpace: "nowrap",
-            transition: "background 0.2s",
-          }}
-        >
-          {actionLabel}
-        </button>
+      {hasMenu && (
+        <>
+          <button
+            type="button"
+            aria-label="打开操作菜单"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+            style={s.headerMenuButton}
+          >
+            ☰
+          </button>
+          {menuOpen && (
+            <>
+              <button
+                type="button"
+                aria-label="关闭操作菜单"
+                onClick={() => setMenuOpen(false)}
+                style={s.headerMenuBackdrop}
+              />
+              <div style={s.headerMenuPanel}>
+                {menuItems.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (!item.disabled) {
+                        item.onClick();
+                      }
+                    }}
+                    disabled={item.disabled}
+                    style={{
+                      ...s.headerMenuItem,
+                      color: item.disabled ? c.textFaint : c.text,
+                      cursor: item.disabled ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
@@ -1484,6 +1515,55 @@ const s = {
     fontWeight: 600,
     fontFamily: "'Albert Sans', sans-serif",
     background: c.surfaceAlt,
+  },
+  headerMenuButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    border: `1px solid ${c.border}`,
+    background: c.surface,
+    color: c.text,
+    fontSize: "1.125rem",
+    fontWeight: 700,
+    fontFamily: "'Albert Sans', sans-serif",
+    lineHeight: 1,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 8px 20px oklch(22% 0.02 55 / 0.06)",
+  },
+  headerMenuBackdrop: {
+    position: "fixed",
+    inset: 0,
+    border: "none",
+    background: "transparent",
+    padding: 0,
+    margin: 0,
+    zIndex: 20,
+  },
+  headerMenuPanel: {
+    position: "absolute",
+    top: "calc(100% - 4px)",
+    right: 20,
+    minWidth: 156,
+    padding: 8,
+    borderRadius: 16,
+    border: `1px solid ${c.border}`,
+    background: c.surface,
+    boxShadow: "0 18px 36px oklch(22% 0.02 55 / 0.14)",
+    zIndex: 21,
+  },
+  headerMenuItem: {
+    width: "100%",
+    border: "none",
+    background: "transparent",
+    borderRadius: 10,
+    padding: "10px 12px",
+    textAlign: "left",
+    fontSize: "0.875rem",
+    fontWeight: 600,
+    fontFamily: "'Albert Sans', sans-serif",
   },
 };
 
