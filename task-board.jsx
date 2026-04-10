@@ -250,7 +250,7 @@ function App() {
                 }
               }}
               style={{ ...s.input, borderColor: pinError ? c.danger : c.border }}
-              placeholder="默认密码 8888"
+              placeholder="请输入管理员密码"
               autoFocus
             />
             {pinError && <p style={{ color: c.danger, fontSize: "0.8125rem", marginTop: 8 }}>密码错误</p>}
@@ -789,8 +789,13 @@ function AdminView({ data, refreshData, onBack }) {
   const [penalty, setPenalty] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [newMember, setNewMember] = useState("");
+  const [oldPin, setOldPin] = useState("");
   const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinChangeError, setPinChangeError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [deleteTaskConfirm, setDeleteTaskConfirm] = useState(null);
 
   const week = data.currentWeek || { tasks: [], status: {}, penalty: "", deadline: "", announcement: "" };
 
@@ -836,6 +841,8 @@ function AdminView({ data, refreshData, onBack }) {
     try {
       await api.deleteTask(id);
       await refreshData();
+      setDeleteTaskConfirm(null);
+      setSuccessMessage("任务已删除");
     } catch (e) { console.error("Remove task failed:", e); }
   };
 
@@ -843,9 +850,13 @@ function AdminView({ data, refreshData, onBack }) {
     try {
       await api.resetWeek();
       await refreshData();
+      setTaskName("");
+      setTaskDesc("");
       setDeadline("");
       setPenalty("");
       setAnnouncement("");
+      setShowResetConfirm(false);
+      setSuccessMessage("本周任务已清空");
     } catch (e) { console.error("Reset failed:", e); }
   };
 
@@ -879,16 +890,18 @@ function AdminView({ data, refreshData, onBack }) {
   };
 
   const changePin = async () => {
-    if (newPin.length >= 4) {
-      try {
-        const oldPin = prompt("请输入当前密码");
-        if (!oldPin) return;
-        await api.changePin(oldPin, newPin);
-        setNewPin("");
-        alert("密码已更新");
-      } catch (e) {
-        alert(e.message || "密码更新失败");
-      }
+    setPinChangeError("");
+    if (!oldPin.trim()) { setPinChangeError("请输入当前密码"); return; }
+    if (newPin.length < 4) { setPinChangeError("新密码至少4位"); return; }
+    if (newPin !== confirmPin) { setPinChangeError("两次输入的新密码不一致"); return; }
+    try {
+      await api.changePin(oldPin, newPin);
+      setOldPin("");
+      setNewPin("");
+      setConfirmPin("");
+      setSuccessMessage("密码已更新");
+    } catch (e) {
+      setPinChangeError(e.message || "密码更新失败");
     }
   };
 
@@ -947,7 +960,6 @@ function AdminView({ data, refreshData, onBack }) {
               <button style={{
                 ...s.btnPrimary,
                 marginTop: 8,
-                background: c.warning,
               }} onClick={async () => {
                 try {
                   await api.updateAnnouncement(announcement);
@@ -980,7 +992,7 @@ function AdminView({ data, refreshData, onBack }) {
                         <div style={{ fontWeight: 600, fontSize: "0.875rem", color: c.text }}>{t.name}</div>
                         {t.desc && <div style={{ fontSize: "0.8125rem", color: c.textMuted, marginTop: 2 }}>{t.desc}</div>}
                       </div>
-                      <button onClick={() => removeTask(t.id)} style={s.btnDanger}>删除</button>
+                      <button onClick={() => setDeleteTaskConfirm(t)} style={s.btnDanger}>删除</button>
                     </div>
                   ))}
                 </div>
@@ -1040,7 +1052,7 @@ function AdminView({ data, refreshData, onBack }) {
               marginTop: 8,
               fontSize: "0.875rem",
               borderRadius: 10,
-            }} onClick={resetWeek}>清空本周任务（开始新一周）</button>
+            }} onClick={() => setShowResetConfirm(true)}>清空本周任务（开始新一周）</button>
           </>
         )}
 
@@ -1077,11 +1089,81 @@ function AdminView({ data, refreshData, onBack }) {
         {tab === "settings" && (
           <div style={s.card}>
             <SectionHeading>修改管理密码</SectionHeading>
-            <input style={s.input} placeholder="新密码（至少4位）" value={newPin} onChange={e => setNewPin(e.target.value)} />
+            <input style={s.input} type="password" placeholder="当前密码" value={oldPin} onChange={e => { setOldPin(e.target.value); setPinChangeError(""); }} />
+            <input style={s.input} type="password" placeholder="新密码（至少4位）" value={newPin} onChange={e => { setNewPin(e.target.value); setPinChangeError(""); }} />
+            <input style={s.input} type="password" placeholder="确认新密码" value={confirmPin} onChange={e => { setConfirmPin(e.target.value); setPinChangeError(""); }} />
+            {pinChangeError && <p style={{ color: c.danger, fontSize: "0.8125rem", margin: "4px 0 0" }}>{pinChangeError}</p>}
             <button style={s.btnPrimary} onClick={changePin}>更新密码</button>
           </div>
         )}
       </div>
+
+      {showResetConfirm && (
+        <div style={{
+          position: "fixed", inset: 0, background: "oklch(22% 0.02 55 / 0.55)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 24, zIndex: 1300, backdropFilter: "blur(6px)",
+        }} onClick={() => setShowResetConfirm(false)}>
+          <div style={{
+            background: c.surface, borderRadius: 16, padding: "28px 24px",
+            maxWidth: 340, width: "100%", textAlign: "center",
+            boxShadow: "0 20px 60px oklch(22% 0.02 55 / 0.25)",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: "1.5rem", marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontSize: "1rem", fontWeight: 700, color: c.text, margin: "0 0 8px", fontFamily: "'Bricolage Grotesque', serif" }}>
+              确定要清空本周任务？
+            </p>
+            <p style={{ fontSize: "0.8125rem", color: c.textMuted, margin: "0 0 24px", lineHeight: 1.5 }}>
+              所有任务、截止时间、惩罚规则和通知公告将被清空，此操作不可撤销。
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button style={{
+                flex: 1, padding: "11px 0", borderRadius: 10, border: `1px solid ${c.border}`,
+                background: c.surface, color: c.text, fontSize: "0.875rem", fontWeight: 600,
+                cursor: "pointer", fontFamily: "'Albert Sans', sans-serif",
+              }} onClick={() => setShowResetConfirm(false)}>取消</button>
+              <button style={{
+                flex: 1, padding: "11px 0", borderRadius: 10, border: "none",
+                background: c.danger, color: "#fff", fontSize: "0.875rem", fontWeight: 600,
+                cursor: "pointer", fontFamily: "'Albert Sans', sans-serif",
+              }} onClick={resetWeek}>确认清空</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTaskConfirm && (
+        <div style={{
+          position: "fixed", inset: 0, background: "oklch(22% 0.02 55 / 0.55)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 24, zIndex: 1300, backdropFilter: "blur(6px)",
+        }} onClick={() => setDeleteTaskConfirm(null)}>
+          <div style={{
+            background: c.surface, borderRadius: 16, padding: "28px 24px",
+            maxWidth: 340, width: "100%", textAlign: "center",
+            boxShadow: "0 20px 60px oklch(22% 0.02 55 / 0.25)",
+          }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontSize: "1rem", fontWeight: 700, color: c.text, margin: "0 0 8px", fontFamily: "'Bricolage Grotesque', serif" }}>
+              确定删除此任务？
+            </p>
+            <p style={{ fontSize: "0.875rem", color: c.textMuted, margin: "0 0 24px", lineHeight: 1.5 }}>
+              {deleteTaskConfirm.name}
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button style={{
+                flex: 1, padding: "11px 0", borderRadius: 10, border: `1px solid ${c.border}`,
+                background: c.surface, color: c.text, fontSize: "0.875rem", fontWeight: 600,
+                cursor: "pointer", fontFamily: "'Albert Sans', sans-serif",
+              }} onClick={() => setDeleteTaskConfirm(null)}>取消</button>
+              <button style={{
+                flex: 1, padding: "11px 0", borderRadius: 10, border: "none",
+                background: c.danger, color: "#fff", fontSize: "0.875rem", fontWeight: 600,
+                cursor: "pointer", fontFamily: "'Albert Sans', sans-serif",
+              }} onClick={() => removeTask(deleteTaskConfirm.id)}>确认删除</button>
+            </div>
+          </div>
+        </div>
+      )}
     </Shell>
   );
 }
