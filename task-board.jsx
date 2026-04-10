@@ -634,6 +634,17 @@ function AdminView({ data, refreshData, onBack }) {
                 value={announcement}
                 onChange={e => setAnnouncement(e.target.value)}
               />
+              <button style={{
+                ...s.btnPrimary,
+                marginTop: 8,
+                background: c.warning,
+              }} onClick={async () => {
+                try {
+                  await api.updateAnnouncement(announcement);
+                  await refreshData();
+                  alert("通知已保存");
+                } catch (e) { console.error("Save announcement failed:", e); }
+              }}>保存通知</button>
             </div>
 
             <div style={s.card}>
