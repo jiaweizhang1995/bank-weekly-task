@@ -13,8 +13,8 @@ The frontend is complete. This roadmap delivers the backend API that powers it �
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Express server with JSON file persistence up and running
-- [ ] **Phase 2: Auth & Members** - Admin authentication and member management API
-- [ ] **Phase 3: Weekly API** - All weekly data, task, and status endpoints
+- [x] **Phase 2: Auth & Members** - Admin authentication and member management API
+- [x] **Phase 3: Weekly API** - All weekly data, task, and status endpoints
 - [ ] **Phase 4: Integration** - Frontend wired to API, single deployable unit ready
 
 ## Phase Details
@@ -74,9 +74,11 @@ Plans:
   3. Admin login, task management, and weekly reset all work end-to-end through the API in the browser
   4. Pushing to main branch triggers GitHub Actions workflow that SSH deploys to ECS, pulls code, installs deps, builds frontend, and restarts pm2 process
   5. After a push-triggered deploy, the live site reflects the new code without manual SSH
-**Plans:** 1 plan
+**Plans:** 3 plans
 Plans:
-- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
+- [ ] 04-01-PLAN.md — Express serves Vite-built frontend as static files with SPA fallback
+- [ ] 04-02-PLAN.md — Refactor frontend from localStorage to API calls
+- [ ] 04-03-PLAN.md — GitHub Actions CI/CD pipeline and end-to-end verification
 **UI hint**: yes
 
 ## Progress
@@ -87,6 +89,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 1/1 | ✓ Complete | 2026-04-10 |
-| 2. Auth & Members | 0/2 | Not started | - |
-| 3. Weekly API | 0/2 | Not started | - |
-| 4. Integration | 0/? | Not started | - |
+| 2. Auth & Members | 2/2 | ✓ Complete | 2026-04-10 |
+| 3. Weekly API | 2/2 | ✓ Complete | 2026-04-10 |
+| 4. Integration | 0/3 | Not started | - |
