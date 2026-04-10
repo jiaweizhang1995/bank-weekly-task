@@ -64,31 +64,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MEMB-01 | Pending | Pending |
-| MEMB-02 | Pending | Pending |
-| MEMB-03 | Pending | Pending |
-| WEEK-01 | Pending | Pending |
-| WEEK-02 | Pending | Pending |
-| WEEK-03 | Pending | Pending |
-| WEEK-04 | Pending | Pending |
-| WEEK-05 | Pending | Pending |
-| WEEK-06 | Pending | Pending |
-| STAT-01 | Pending | Pending |
-| STAT-02 | Pending | Pending |
-| STAT-03 | Pending | Pending |
-| AUTH-01 | Pending | Pending |
-| AUTH-02 | Pending | Pending |
-| AUTH-03 | Pending | Pending |
-| AUTH-04 | Pending | Pending |
-| INFR-01 | Pending | Pending |
-| INFR-02 | Pending | Pending |
-| INFR-03 | Pending | Pending |
+| INFR-01 | Phase 1 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| MEMB-01 | Phase 2 | Pending |
+| MEMB-02 | Phase 2 | Pending |
+| MEMB-03 | Phase 2 | Pending |
+| WEEK-01 | Phase 3 | Pending |
+| WEEK-02 | Phase 3 | Pending |
+| WEEK-03 | Phase 3 | Pending |
+| WEEK-04 | Phase 3 | Pending |
+| WEEK-05 | Phase 3 | Pending |
+| WEEK-06 | Phase 3 | Pending |
+| STAT-01 | Phase 3 | Pending |
+| STAT-02 | Phase 3 | Pending |
+| STAT-03 | Phase 3 | Pending |
+| INFR-02 | Phase 4 | Pending |
+| INFR-03 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-10*
-*Last updated: 2026-04-10 after initial definition*
+*Last updated: 2026-04-10 after roadmap creation — all 19 requirements mapped*
