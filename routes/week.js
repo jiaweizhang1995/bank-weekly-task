@@ -107,8 +107,8 @@ router.put('/tasks/:taskId/status/:member', (req, res) => {
     return res.status(404).json({ error: '任务不存在' });
   }
 
-  // Auth logic: "rejected" and null require admin token
-  if (statusVal === 'rejected' || statusVal === null) {
+  // Auth logic: "rejected" requires admin token; null (undo done) is allowed for members
+  if (statusVal === 'rejected') {
     const auth = req.headers.authorization;
     if (!auth || !auth.startsWith('Bearer ') || !verifyToken(auth.slice(7))) {
       return res.status(401).json({ error: '未授权，请先登录' });

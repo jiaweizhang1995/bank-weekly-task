@@ -1169,18 +1169,21 @@ function MemberView({ data, refreshData, member, onBack }) {
   const week = data.currentWeek;
   const hasTasks = week && week.tasks && week.tasks.length > 0;
 
-  const markDone = async (taskId) => {
+  const toggleDone = async (taskId) => {
     const st = (week.status || {})[member];
-    if (st && st[taskId] === "done") return;
+    const cur = st ? st[taskId] : null;
+    const newStatus = cur === "done" ? null : "done";
     try {
-      await api.updateStatus(taskId, member, "done");
+      await api.updateStatus(taskId, member, newStatus);
       await refreshData();
-    } catch (e) { console.error("Mark done failed:", e); }
+    } catch (e) {
+      console.error("Toggle done failed:", e);
+    }
   };
 
   return (
     <Shell>
-      <Header title={`${member} 的任务`} onBack={onBack} />
+      <Header title={`${member} 的本周任务`} onBack={onBack} />
       <div style={s.content}>
         <div style={s.captureArea}>
           {!hasTasks ? (
@@ -1196,19 +1199,6 @@ function MemberView({ data, refreshData, member, onBack }) {
             </div>
           ) : (
             <>
-              <div style={{
-                ...s.card,
-                background: "linear-gradient(135deg, oklch(96% 0.018 75), oklch(91% 0.03 50))",
-              }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: "1.25rem",
-                  lineHeight: 1.2,
-                  color: c.text,
-                  fontFamily: "'Bricolage Grotesque', serif",
-                }}>{member} 的本周任务清单</h3>
-              </div>
-
               {week.deadline && (
                 <div style={{
                   ...s.card,
@@ -1274,55 +1264,35 @@ function MemberView({ data, refreshData, member, onBack }) {
                         borderRadius: 10,
                         padding: "14px 16px",
                         border: `1px solid ${itemBorder}`,
-                      }}>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          justifyContent: "space-between",
-                          gap: 12,
-                        }}>
-                          <div style={{ flex: 1, display: "flex", alignItems: "flex-start", gap: 10 }}>
-                            <div style={{ paddingTop: 1 }}>
-                              <StatusDot val={val} />
-                            </div>
-                            <div>
-                              <span style={{
-                                fontWeight: 600,
-                                fontSize: "0.875rem",
-                                color: isDone ? c.success : isRejected ? c.danger : c.text,
-                              }}>{t.name}</span>
-                              {t.desc && (
-                                <div style={{
-                                  fontSize: "0.8125rem",
-                                  color: c.textMuted,
-                                  marginTop: 4,
-                                  lineHeight: 1.55,
-                                }}>{t.desc}</div>
-                              )}
-                              {isRejected && (
-                                <div style={{
-                                  fontSize: "0.75rem",
-                                  color: c.danger,
-                                  marginTop: 4,
-                                  fontWeight: 500,
-                                }}>被管理员打回，请重新提交</div>
-                              )}
-                            </div>
+                        cursor: "pointer",
+                      }} onClick={() => toggleDone(t.id)}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <div style={{ paddingTop: 1 }}>
+                            <StatusDot val={val} />
                           </div>
-                          {!isDone && (
-                            <button
-                              style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: c.success, border: "none",
-                                color: "#fff", fontSize: "1.1rem", lineHeight: 1,
-                                cursor: "pointer", flexShrink: 0,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                              }}
-                              onClick={() => markDone(t.id)}
-                            >
-                              ✓
-                            </button>
-                          )}
+                          <div>
+                            <span style={{
+                              fontWeight: 600,
+                              fontSize: "0.875rem",
+                              color: isDone ? c.success : isRejected ? c.danger : c.text,
+                            }}>{t.name}</span>
+                            {t.desc && (
+                              <div style={{
+                                fontSize: "0.8125rem",
+                                color: c.textMuted,
+                                marginTop: 4,
+                                lineHeight: 1.55,
+                              }}>{t.desc}</div>
+                            )}
+                            {isRejected && (
+                              <div style={{
+                                fontSize: "0.75rem",
+                                color: c.danger,
+                                marginTop: 4,
+                                fontWeight: 500,
+                              }}>被管理员打回，请重新提交</div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
