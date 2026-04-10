@@ -175,7 +175,7 @@ function Landing({ data, onSelectMember, onAdminClick }) {
           textTransform: "uppercase",
           color: c.accent,
           margin: "0 0 8px",
-        }}>Weekly Task Board</p>
+        }}>平安银行顶私顾问周看板</p>
         <h1 style={{
           fontFamily: "'Bricolage Grotesque', serif",
           fontSize: "clamp(1.75rem, 5vw + 0.5rem, 2.25rem)",
@@ -186,16 +186,9 @@ function Landing({ data, onSelectMember, onAdminClick }) {
         }}>周工作看板</h1>
         <p style={{
           fontFamily: "'Albert Sans', sans-serif",
-          fontSize: "0.9375rem",
-          color: c.textMuted,
-          marginTop: 8,
-          lineHeight: 1.5,
-        }}>选择你的名字进入</p>
-        <p style={{
-          fontFamily: "'Albert Sans', sans-serif",
           fontSize: "0.8125rem",
           color: c.textMuted,
-          margin: "8px 0 0",
+          margin: "10px 0 0",
           fontVariantNumeric: "tabular-nums",
         }}>
           {(() => {
@@ -498,6 +491,7 @@ function AdminView({ data, refreshData, onBack }) {
   const [announcement, setAnnouncement] = useState("");
   const [newMember, setNewMember] = useState("");
   const [newPin, setNewPin] = useState("");
+  const [saveSuccessVisible, setSaveSuccessVisible] = useState(false);
 
   const week = data.currentWeek || { tasks: [], status: {}, penalty: "", deadline: "", announcement: "" };
 
@@ -509,11 +503,22 @@ function AdminView({ data, refreshData, onBack }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (!saveSuccessVisible) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveSuccessVisible(false);
+    }, 1600);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [saveSuccessVisible]);
+
   const publishWeek = async () => {
     try {
       await api.updateAnnouncement(announcement);
       await api.updateSettings({ deadline, penalty });
       await refreshData();
+      setSaveSuccessVisible(true);
     } catch (e) { console.error("Publish failed:", e); }
   };
 
@@ -596,6 +601,11 @@ function AdminView({ data, refreshData, onBack }) {
   return (
     <Shell>
       <Header title="管理后台" onBack={onBack} />
+      {saveSuccessVisible && (
+        <div style={s.successToastOverlay}>
+          <div style={s.successToast}>保存成功</div>
+        </div>
+      )}
       <div style={{
         display: "flex",
         gap: 0,
@@ -1098,6 +1108,29 @@ const s = {
     borderBottom: `1px solid ${c.borderSub}`,
     color: c.text,
     fontSize: "0.8125rem",
+  },
+  successToastOverlay: {
+    position: "fixed",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    pointerEvents: "none",
+    zIndex: 1000,
+  },
+  successToast: {
+    minWidth: 140,
+    padding: "16px 28px",
+    borderRadius: 14,
+    background: "oklch(24% 0.02 55 / 0.88)",
+    color: "#fff",
+    fontSize: "1rem",
+    fontWeight: 700,
+    fontFamily: "'Bricolage Grotesque', serif",
+    letterSpacing: "0.02em",
+    boxShadow: "0 18px 48px oklch(24% 0.02 55 / 0.22)",
+    textAlign: "center",
+    backdropFilter: "blur(8px)",
   },
 };
 
