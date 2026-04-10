@@ -59,9 +59,10 @@ Plans:
   4. Admin can add a task (POST /week/tasks) and delete it (DELETE /week/tasks/{taskId}); GET /week reflects changes
   5. Member can mark own task done (PUT /week/tasks/{taskId}/status/{member} with status=done); admin can reject (status=rejected) or reset (status=null)
   6. Admin POST /week/reset returns all task statuses to null and clears announcement/settings to defaults
-**Plans:** 1 plan
+**Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
+- [ ] 03-01-PLAN.md — Week data read, announcement, and settings endpoints
+- [ ] 03-02-PLAN.md — Task CRUD, status management, and week reset endpoints
 
 ### Phase 4: Integration
 **Goal**: Express serves the built frontend as static files, frontend uses the API instead of localStorage, GitHub Actions CI/CD auto-deploys to Alibaba Cloud HK ECS — one server, one URL, fully working app
@@ -87,5 +88,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 1/1 | ✓ Complete | 2026-04-10 |
 | 2. Auth & Members | 0/2 | Not started | - |
-| 3. Weekly API | 0/? | Not started | - |
+| 3. Weekly API | 0/2 | Not started | - |
 | 4. Integration | 0/? | Not started | - |
