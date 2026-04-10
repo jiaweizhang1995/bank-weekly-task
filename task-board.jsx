@@ -58,6 +58,133 @@ async function canvasToBlob(canvas) {
   });
 }
 
+function useBoardExport({ captureRef, fileBaseName, shareTitle, shareText }) {
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+  const [exportPreviewUrl, setExportPreviewUrl] = useState("");
+  const [exportBlob, setExportBlob] = useState(null);
+  const [exportFileName, setExportFileName] = useState("");
+  const [shareHint, setShareHint] = useState("图片生成后会在这里预览，可长按保存");
+  const canUseWebShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  useEffect(() => {
+    return () => {
+      if (exportPreviewUrl) {
+        URL.revokeObjectURL(exportPreviewUrl);
+      }
+    };
+  }, [exportPreviewUrl]);
+
+  const closeExportPreview = () => {
+    setExportPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+      return "";
+    });
+    setExportBlob(null);
+    setExportFileName("");
+    setShareHint("图片生成后会在这里预览，可长按保存");
+  };
+
+  const attemptShareExport = async (blobToShare = exportBlob, fileName = exportFileName) => {
+    if (!blobToShare || !canUseWebShare) {
+      setShareHint("当前浏览器不支持系统分享，请长按保存图片");
+      return false;
+    }
+
+    const shareFile = new File([blobToShare], fileName || `${fileBaseName}.png`, {
+      type: blobToShare.type || "image/png",
+    });
+    const shareData = {
+      files: [shareFile],
+      title: shareTitle,
+      text: shareText,
+    };
+
+    if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
+      setShareHint("当前浏览器不支持直接分享图片文件，请长按保存图片");
+      return false;
+    }
+
+    try {
+      await navigator.share(shareData);
+      setShareHint("已尝试打开系统分享，如未保存成功可返回后长按图片");
+      return true;
+    } catch (e) {
+      console.error("Share export failed:", e);
+      setShareHint("系统分享未完成，请长按保存图片");
+      return false;
+    }
+  };
+
+  const handleExportBoard = async () => {
+    if (isExporting || !captureRef.current) return;
+
+    const captureNode = captureRef.current;
+
+    setIsExporting(true);
+    setExportError("");
+
+    try {
+      setShareHint("长图生成中，请稍候...");
+      const width = Math.max(captureNode.scrollWidth, captureNode.offsetWidth);
+      const height = Math.max(captureNode.scrollHeight, captureNode.offsetHeight);
+      const canvas = await html2canvas(captureNode, {
+        backgroundColor: c.bg,
+        useCORS: true,
+        logging: false,
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        width,
+        height,
+        windowWidth: width,
+        windowHeight: height,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+      });
+      const blob = await canvasToBlob(canvas);
+      const fileName = `${fileBaseName}-${new Date().toISOString().slice(0, 10)}.png`;
+      const objectUrl = URL.createObjectURL(blob);
+
+      setExportBlob(blob);
+      setExportFileName(fileName);
+      setExportPreviewUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+        return objectUrl;
+      });
+
+      setShareHint("长按保存图片，如浏览器支持会自动尝试系统分享");
+
+      if (canUseWebShare) {
+        await new Promise((resolve) => window.setTimeout(resolve, 80));
+        await attemptShareExport(blob, fileName);
+      } else {
+        setShareHint("当前浏览器不支持系统分享，请长按保存图片");
+      }
+    } catch (e) {
+      console.error("Export long image failed:", e);
+      setExportError("长图生成失败，请稍后重试");
+      setShareHint("图片生成失败，请关闭后重试");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return {
+    isExporting,
+    exportError,
+    exportPreviewUrl,
+    exportFileName,
+    shareHint,
+    canUseWebShare,
+    closeExportPreview,
+    attemptShareExport,
+    handleExportBoard,
+  };
+}
+
 /* =================== App =================== */
 function App() {
   const [members, setMembers] = useState([]);
@@ -172,120 +299,222 @@ function Shell({ children }) {
 function Landing({ data, onSelectMember, onAdminClick }) {
   const week = data.currentWeek;
   const hasTasks = week && week.tasks && week.tasks.length > 0;
+  const captureRef = useRef(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const {
+    isExporting,
+    exportError,
+    exportPreviewUrl,
+    exportFileName,
+    shareHint,
+    canUseWebShare,
+    closeExportPreview,
+    attemptShareExport,
+    handleExportBoard,
+  } = useBoardExport({
+    captureRef,
+    fileBaseName: "周工作看板",
+    shareTitle: "平安银行顶私顾问周看板",
+    shareText: "首页周工作看板长图",
+  });
 
   return (
     <Shell>
-      <div style={{
-        padding: "48px 24px 32px",
-        textAlign: "left",
-        borderBottom: `1px solid ${c.border}`,
-      }}>
-        <p style={{
-          fontFamily: "'Albert Sans', sans-serif",
-          fontSize: "0.75rem",
-          fontWeight: 600,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: c.accent,
-          margin: "0 0 8px",
-        }}>平安银行顶私顾问</p>
-        <h1 style={{
-          fontFamily: "'Bricolage Grotesque', serif",
-          fontSize: "clamp(1.75rem, 5vw + 0.5rem, 2.25rem)",
-          fontWeight: 800,
-          color: c.text,
-          margin: 0,
-          lineHeight: 1.15,
-        }}>周工作看板</h1>
-        <p style={{
-          fontFamily: "'Albert Sans', sans-serif",
-          fontSize: "0.8125rem",
-          color: c.textMuted,
-          margin: "10px 0 0",
-          fontVariantNumeric: "tabular-nums",
+      {exportError && (
+        <div style={{ ...s.content, paddingBottom: 0 }}>
+          <div style={{
+            ...s.card,
+            background: c.dangerBg,
+            border: `1px solid oklch(82% 0.04 25)`,
+            color: c.danger,
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+            marginBottom: 0,
+          }}>
+            {exportError}
+          </div>
+        </div>
+      )}
+
+      {isExporting && (
+        <div style={{ ...s.content, paddingBottom: 0 }}>
+          <div style={{
+            ...s.card,
+            background: c.accentSoft,
+            border: `1px solid oklch(82% 0.04 50)`,
+            color: c.accent,
+            marginBottom: 0,
+          }}>
+            <div style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: 6 }}>正在生成长图</div>
+            <div style={{ fontSize: "0.8125rem", lineHeight: 1.6 }}>请稍候，生成完成后会自动弹出预览图层。</div>
+          </div>
+        </div>
+      )}
+
+      <div ref={captureRef}>
+        <div style={{
+          padding: "40px 24px 32px",
+          textAlign: "left",
+          borderBottom: `1px solid ${c.border}`,
+          position: "relative",
         }}>
-          {(() => {
-            const d = new Date();
-            const days = ["日", "一", "二", "三", "四", "五", "六"];
-            return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${days[d.getDay()]}`;
-          })()}
-        </p>
+          <div
+            data-html2canvas-ignore="true"
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+            }}
+          >
+            <button
+              type="button"
+              aria-label="打开操作菜单"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+              style={s.headerMenuButton}
+            >
+              ☰
+            </button>
+            {menuOpen && (
+              <>
+                <button
+                  type="button"
+                  aria-label="关闭操作菜单"
+                  onClick={() => setMenuOpen(false)}
+                  style={s.headerMenuBackdrop}
+                />
+                <div style={{ ...s.headerMenuPanel, top: 52, right: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (!isExporting && hasTasks) {
+                        handleExportBoard();
+                      }
+                    }}
+                    disabled={isExporting || !hasTasks}
+                    style={{
+                      ...s.headerMenuItem,
+                      color: isExporting || !hasTasks ? c.textFaint : c.text,
+                      cursor: isExporting || !hasTasks ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {isExporting ? "生成中..." : "导出为长图"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <p style={{
+            fontFamily: "'Albert Sans', sans-serif",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: c.accent,
+            margin: "0 0 8px",
+          }}>平安银行顶私顾问</p>
+          <h1 style={{
+            fontFamily: "'Bricolage Grotesque', serif",
+            fontSize: "clamp(1.75rem, 5vw + 0.5rem, 2.25rem)",
+            fontWeight: 800,
+            color: c.text,
+            margin: 0,
+            lineHeight: 1.15,
+          }}>周工作看板</h1>
+          <p style={{
+            fontFamily: "'Albert Sans', sans-serif",
+            fontSize: "0.8125rem",
+            color: c.textMuted,
+            margin: "10px 0 0",
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            {(() => {
+              const d = new Date();
+              const days = ["日", "一", "二", "三", "四", "五", "六"];
+              return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${days[d.getDay()]}`;
+            })()}
+          </p>
+        </div>
+
+        <div style={s.content}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+            gap: 12,
+          }}>
+            {data.members.map((name, idx) => {
+              const completed = hasTasks ? week.tasks.filter(t => {
+                const st = (week.status || {})[name];
+                return st && st[t.id];
+              }).length : 0;
+              const total = hasTasks ? week.tasks.length : 0;
+              const hues = [45, 25, 155, 200, 330];
+              const hue = hues[idx % hues.length];
+
+              return (
+                <button key={name} style={{
+                  background: c.surface,
+                  border: `1px solid ${c.border}`,
+                  borderRadius: 12,
+                  padding: "20px 12px 16px",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  transition: "border-color 0.2s, box-shadow 0.2s",
+                  fontFamily: "'Albert Sans', sans-serif",
+                }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = c.accent;
+                    e.currentTarget.style.boxShadow = `0 2px 12px oklch(52% 0.14 45 / 0.08)`;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = c.border;
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                  onClick={() => onSelectMember(name)}
+                >
+                  <div style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    background: `oklch(90% 0.06 ${hue})`,
+                    color: `oklch(35% 0.1 ${hue})`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.125rem",
+                    fontWeight: 700,
+                    fontFamily: "'Bricolage Grotesque', serif",
+                  }}>{name[0]}</div>
+                  <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: c.text }}>{name}</div>
+                  {hasTasks && (
+                    <div style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 500,
+                      color: completed === total ? c.success : c.textFaint,
+                      fontVariantNumeric: "tabular-nums",
+                    }}>
+                      {completed}/{total} 已完成
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {hasTasks && (
+            <div style={{ marginTop: 28 }}>
+              <StatusBoard data={data} />
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={s.content}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-          gap: 12,
-        }}>
-          {data.members.map((name, idx) => {
-            const completed = hasTasks ? week.tasks.filter(t => {
-              const st = (week.status || {})[name];
-              return st && st[t.id];
-            }).length : 0;
-            const total = hasTasks ? week.tasks.length : 0;
-            const hues = [45, 25, 155, 200, 330];
-            const hue = hues[idx % hues.length];
-
-            return (
-              <button key={name} style={{
-                background: c.surface,
-                border: `1px solid ${c.border}`,
-                borderRadius: 12,
-                padding: "20px 12px 16px",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
-                transition: "border-color 0.2s, box-shadow 0.2s",
-                fontFamily: "'Albert Sans', sans-serif",
-              }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = c.accent;
-                  e.currentTarget.style.boxShadow = `0 2px 12px oklch(52% 0.14 45 / 0.08)`;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = c.border;
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-                onClick={() => onSelectMember(name)}
-              >
-                <div style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  background: `oklch(90% 0.06 ${hue})`,
-                  color: `oklch(35% 0.1 ${hue})`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.125rem",
-                  fontWeight: 700,
-                  fontFamily: "'Bricolage Grotesque', serif",
-                }}>{name[0]}</div>
-                <div style={{ fontWeight: 600, fontSize: "0.9375rem", color: c.text }}>{name}</div>
-                {hasTasks && (
-                  <div style={{
-                    fontSize: "0.75rem",
-                    fontWeight: 500,
-                    color: completed === total ? c.success : c.textFaint,
-                    fontVariantNumeric: "tabular-nums",
-                  }}>
-                    {completed}/{total} 已完成
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {hasTasks && (
-          <div style={{ marginTop: 28 }}>
-            <StatusBoard data={data} />
-          </div>
-        )}
-
         <button style={{
           width: "100%",
           padding: "14px 0",
@@ -307,6 +536,63 @@ function Landing({ data, onSelectMember, onAdminClick }) {
           管理后台
         </button>
       </div>
+
+      {exportPreviewUrl && (
+        <div style={s.previewOverlay}>
+          <div style={s.previewCard}>
+            <div style={s.previewHeader}>
+              <div>
+                <div style={{
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  color: c.text,
+                  fontFamily: "'Bricolage Grotesque', serif",
+                }}>长图预览</div>
+                <div style={{
+                  marginTop: 4,
+                  fontSize: "0.8125rem",
+                  color: c.textMuted,
+                  lineHeight: 1.6,
+                }}>{shareHint}</div>
+              </div>
+              <button
+                type="button"
+                onClick={closeExportPreview}
+                style={s.previewCloseButton}
+              >
+                关闭
+              </button>
+            </div>
+
+            <div style={s.previewImageWrap}>
+              <img
+                src={exportPreviewUrl}
+                alt="首页周工作看板长图"
+                style={s.previewImage}
+              />
+            </div>
+
+            <div style={s.previewActions}>
+              {canUseWebShare && (
+                <button
+                  type="button"
+                  onClick={() => attemptShareExport()}
+                  style={{ ...s.btnPrimary, marginTop: 0, width: "auto", padding: "10px 18px" }}
+                >
+                  系统分享
+                </button>
+              )}
+              <a
+                href={exportPreviewUrl}
+                download={exportFileName || "周工作看板.png"}
+                style={s.previewDownloadLink}
+              >
+                下载图片
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </Shell>
   );
 }
@@ -804,22 +1090,6 @@ function AdminView({ data, refreshData, onBack }) {
 function MemberView({ data, refreshData, member, onBack }) {
   const week = data.currentWeek;
   const hasTasks = week && week.tasks && week.tasks.length > 0;
-  const captureRef = useRef(null);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState("");
-  const [exportPreviewUrl, setExportPreviewUrl] = useState("");
-  const [exportBlob, setExportBlob] = useState(null);
-  const [exportFileName, setExportFileName] = useState("");
-  const [shareHint, setShareHint] = useState("图片生成后会在这里预览，可长按保存");
-  const canUseWebShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
-
-  useEffect(() => {
-    return () => {
-      if (exportPreviewUrl) {
-        URL.revokeObjectURL(exportPreviewUrl);
-      }
-    };
-  }, [exportPreviewUrl]);
 
   const markDone = async (taskId) => {
     const st = (week.status || {})[member];
@@ -830,143 +1100,11 @@ function MemberView({ data, refreshData, member, onBack }) {
     } catch (e) { console.error("Mark done failed:", e); }
   };
 
-  const closeExportPreview = () => {
-    setExportPreviewUrl((currentUrl) => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl);
-      }
-      return "";
-    });
-    setExportBlob(null);
-    setExportFileName("");
-    setShareHint("图片生成后会在这里预览，可长按保存");
-  };
-
-  const attemptShareExport = async (blobToShare = exportBlob, fileName = exportFileName) => {
-    if (!blobToShare || !canUseWebShare) {
-      setShareHint("当前浏览器不支持系统分享，请长按保存图片");
-      return false;
-    }
-
-    const shareFile = new File([blobToShare], fileName || `${member}-周工作看板.png`, {
-      type: blobToShare.type || "image/png",
-    });
-    const shareData = {
-      files: [shareFile],
-      title: `${member} 的周工作看板`,
-      text: "本周任务长图",
-    };
-
-    if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
-      setShareHint("当前浏览器不支持直接分享图片文件，请长按保存图片");
-      return false;
-    }
-
-    try {
-      await navigator.share(shareData);
-      setShareHint("已尝试打开系统分享，如未保存成功可返回后长按图片");
-      return true;
-    } catch (e) {
-      console.error("Share export failed:", e);
-      setShareHint("系统分享未完成，请长按保存图片");
-      return false;
-    }
-  };
-
-  const handleExportBoard = async () => {
-    if (isExporting || !captureRef.current) return;
-
-    const captureNode = captureRef.current;
-
-    setIsExporting(true);
-    setExportError("");
-
-    try {
-      setShareHint("长图生成中，请稍候...");
-      const width = Math.max(captureNode.scrollWidth, captureNode.offsetWidth);
-      const height = Math.max(captureNode.scrollHeight, captureNode.offsetHeight);
-      const canvas = await html2canvas(captureNode, {
-        backgroundColor: c.bg,
-        useCORS: true,
-        logging: false,
-        scale: Math.min(window.devicePixelRatio || 1, 2),
-        width,
-        height,
-        windowWidth: width,
-        windowHeight: height,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-      });
-      const blob = await canvasToBlob(canvas);
-      const fileName = `${member}-周工作看板-${new Date().toISOString().slice(0, 10)}.png`;
-      const objectUrl = URL.createObjectURL(blob);
-
-      setExportBlob(blob);
-      setExportFileName(fileName);
-      setExportPreviewUrl((currentUrl) => {
-        if (currentUrl) {
-          URL.revokeObjectURL(currentUrl);
-        }
-        return objectUrl;
-      });
-
-      setShareHint("长按保存图片，如浏览器支持会自动尝试系统分享");
-
-      if (canUseWebShare) {
-        await new Promise((resolve) => window.setTimeout(resolve, 80));
-        await attemptShareExport(blob, fileName);
-      } else {
-        setShareHint("当前浏览器不支持系统分享，请长按保存图片");
-      }
-    } catch (e) {
-      console.error("Export long image failed:", e);
-      setExportError("长图生成失败，请稍后重试");
-      setShareHint("图片生成失败，请关闭后重试");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   return (
     <Shell>
-      <Header
-        title={`${member} 的任务`}
-        onBack={onBack}
-        menuItems={[
-          {
-            label: isExporting ? "生成中..." : "导出为长图",
-            onClick: handleExportBoard,
-            disabled: isExporting || !hasTasks,
-          },
-        ]}
-      />
+      <Header title={`${member} 的任务`} onBack={onBack} />
       <div style={s.content}>
-        {exportError && (
-          <div style={{
-            ...s.card,
-            background: c.dangerBg,
-            border: `1px solid oklch(82% 0.04 25)`,
-            color: c.danger,
-            fontSize: "0.8125rem",
-            fontWeight: 600,
-          }}>
-            {exportError}
-          </div>
-        )}
-
-        {isExporting && (
-          <div style={{
-            ...s.card,
-            background: c.accentSoft,
-            border: `1px solid oklch(82% 0.04 50)`,
-            color: c.accent,
-          }}>
-            <div style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: 6 }}>正在生成长图</div>
-            <div style={{ fontSize: "0.8125rem", lineHeight: 1.6 }}>请稍候，生成完成后会自动弹出预览图层。</div>
-          </div>
-        )}
-
-        <div ref={captureRef} style={s.captureArea}>
+        <div style={s.captureArea}>
           {!hasTasks ? (
             <div style={{ ...s.card, textAlign: "center", padding: "48px 18px", marginBottom: 0 }}>
               <p style={{
@@ -1132,62 +1270,6 @@ function MemberView({ data, refreshData, member, onBack }) {
           )}
         </div>
 
-        {exportPreviewUrl && (
-          <div style={s.previewOverlay}>
-            <div style={s.previewCard}>
-              <div style={s.previewHeader}>
-                <div>
-                  <div style={{
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    color: c.text,
-                    fontFamily: "'Bricolage Grotesque', serif",
-                  }}>长图预览</div>
-                  <div style={{
-                    marginTop: 4,
-                    fontSize: "0.8125rem",
-                    color: c.textMuted,
-                    lineHeight: 1.6,
-                  }}>{shareHint}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeExportPreview}
-                  style={s.previewCloseButton}
-                >
-                  关闭
-                </button>
-              </div>
-
-              <div style={s.previewImageWrap}>
-                <img
-                  src={exportPreviewUrl}
-                  alt={`${member} 的周工作看板长图`}
-                  style={s.previewImage}
-                />
-              </div>
-
-              <div style={s.previewActions}>
-                {canUseWebShare && (
-                  <button
-                    type="button"
-                    onClick={() => attemptShareExport()}
-                    style={{ ...s.btnPrimary, marginTop: 0, width: "auto", padding: "10px 18px" }}
-                  >
-                    系统分享
-                  </button>
-                )}
-                <a
-                  href={exportPreviewUrl}
-                  download={exportFileName || `${member}-周工作看板.png`}
-                  style={s.previewDownloadLink}
-                >
-                  下载图片
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </Shell>
   );
