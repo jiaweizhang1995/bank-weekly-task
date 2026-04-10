@@ -36,7 +36,7 @@
 ### Infrastructure
 
 - [ ] **INFR-01**: Express server with JSON file persistence (read/write data.json)
-- [ ] **INFR-02**: Express serves Vite-built frontend as static files
+- [x] **INFR-02**: Express serves Vite-built frontend as static files
 - [ ] **INFR-03**: Frontend refactored from localStorage to API calls
 
 ## v2 Requirements
@@ -81,7 +81,7 @@
 | STAT-01 | Phase 3 | Complete |
 | STAT-02 | Phase 3 | Complete |
 | STAT-03 | Phase 3 | Complete |
-| INFR-02 | Phase 4 | Pending |
+| INFR-02 | Phase 4 | Complete |
 | INFR-03 | Phase 4 | Pending |
 
 **Coverage:**

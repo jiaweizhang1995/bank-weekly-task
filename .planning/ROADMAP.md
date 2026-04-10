@@ -76,7 +76,7 @@ Plans:
   5. After a push-triggered deploy, the live site reflects the new code without manual SSH
 **Plans:** 3 plans
 Plans:
-- [ ] 04-01-PLAN.md — Express serves Vite-built frontend as static files with SPA fallback
+- [x] 04-01-PLAN.md — Express serves Vite-built frontend as static files with SPA fallback
 - [ ] 04-02-PLAN.md — Refactor frontend from localStorage to API calls
 - [ ] 04-03-PLAN.md — GitHub Actions CI/CD pipeline and end-to-end verification
 **UI hint**: yes
