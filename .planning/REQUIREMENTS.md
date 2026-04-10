@@ -28,9 +28,9 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: Admin can log in with PIN and receive a token (POST /admin/login)
-- [ ] **AUTH-02**: Admin can change the PIN while authenticated (PUT /admin/pin)
-- [ ] **AUTH-03**: All write endpoints for admin require valid token
+- [x] **AUTH-01**: Admin can log in with PIN and receive a token (POST /admin/login)
+- [x] **AUTH-02**: Admin can change the PIN while authenticated (PUT /admin/pin)
+- [x] **AUTH-03**: All write endpoints for admin require valid token
 - [ ] **AUTH-04**: Member write endpoints only require name parameter (no auth)
 
 ### Infrastructure
@@ -65,9 +65,9 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | INFR-01 | Phase 1 | Pending |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
+| AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Pending |
 | MEMB-01 | Phase 2 | Pending |
 | MEMB-02 | Phase 2 | Pending |

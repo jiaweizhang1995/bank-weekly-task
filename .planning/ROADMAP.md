@@ -45,7 +45,7 @@ Plans:
   6. Admin can delete a member (DELETE /members/{name}) and the member is gone from subsequent GET /members
 **Plans:** 2 plans
 Plans:
-- [ ] 02-01-PLAN.md — Auth middleware, admin login, and PIN change endpoints
+- [x] 02-01-PLAN.md — Auth middleware, admin login, and PIN change endpoints
 - [ ] 02-02-PLAN.md — Member CRUD endpoints (list, add, delete)
 
 ### Phase 3: Weekly API

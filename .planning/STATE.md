@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 1 complete — Express server with JSON persistence
-last_updated: "2026-04-10T15:49:01.836Z"
-last_activity: 2026-04-10 -- Phase 2 planning complete
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-04-10T15:54:25.672Z"
+last_activity: 2026-04-10
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** Members can see their weekly tasks and mark them done, and the admin can manage everything from one simple interface
-**Current focus:** Phase 2 — Auth & Members (next)
+**Current focus:** Phase 02 — auth-members
 
 ## Current Position
 
-Phase: 01 (foundation) — COMPLETE ✓
-Plan: 1 of 1 ✓
+Phase: 02 (auth-members) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-04-10 -- Phase 2 planning complete
+Last activity: 2026-04-10
 
 Progress: [██░░░░░░░░] 25%
 
@@ -52,6 +52,7 @@ Progress: [██░░░░░░░░] 25%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 02-01 P01 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - Init: Same-server deployment for frontend + backend (avoids CORS complexity)
 - Init: Token-based admin auth, stateless (simple Express implementation)
 - Init: Members identified by name parameter only, no auth system
+- [Phase 02-01]: In-memory Map for token storage with 24h TTL — sufficient for 5-10 user scale
+- [Phase 02-01]: crypto.randomBytes(32) for 64-char hex tokens — brute force infeasible
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10
-Stopped at: Phase 1 complete — Express server with JSON persistence
+Last session: 2026-04-10T15:54:25.669Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
