@@ -185,4 +185,198 @@ describe('Week routes', () => {
     assert.equal(res.status, 400);
     assert.ok(res.body.error);
   });
+
+  // =================== Task CRUD Tests ===================
+
+  it('POST /api/week/tasks with token and valid body returns 201 with task', async () => {
+    const token = await getToken();
+    const res = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '写周报',
+      desc: '总结',
+    });
+    assert.equal(res.status, 201);
+    assert.ok(res.body.task);
+    assert.ok(res.body.task.id);
+    assert.equal(res.body.task.name, '写周报');
+    assert.equal(res.body.task.desc, '总结');
+  });
+
+  it('POST /api/week/tasks with token and missing name returns 400', async () => {
+    const token = await getToken();
+    const res = await request('POST', '/api/week/tasks', {
+      _token: token,
+      desc: '无名任务',
+    });
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error);
+  });
+
+  it('POST /api/week/tasks without token returns 401', async () => {
+    const res = await request('POST', '/api/week/tasks', { name: '测试' });
+    assert.equal(res.status, 401);
+  });
+
+  it('DELETE /api/week/tasks/:taskId with token removes task', async () => {
+    const token = await getToken();
+    // Create a task first
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '待删任务',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    // Delete the task
+    const delRes = await request('DELETE', `/api/week/tasks/${taskId}`, { _token: token });
+    assert.equal(delRes.status, 200);
+
+    // Verify task is gone
+    const getRes = await request('GET', '/api/week');
+    const found = getRes.body.tasks.find(t => t.id === taskId);
+    assert.equal(found, undefined);
+  });
+
+  it('DELETE /api/week/tasks/:taskId with non-existent ID returns 404', async () => {
+    const token = await getToken();
+    const res = await request('DELETE', '/api/week/tasks/9999999', { _token: token });
+    assert.equal(res.status, 404);
+  });
+
+  it('DELETE /api/week/tasks/:taskId without token returns 401', async () => {
+    const res = await request('DELETE', '/api/week/tasks/123');
+    assert.equal(res.status, 401);
+  });
+
+  it('DELETE /api/week/tasks/:taskId also removes taskId from member status entries', async () => {
+    const token = await getToken();
+    // Create a task
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '状态清理测试',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    // Mark it done for a member
+    await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, { status: 'done' });
+
+    // Verify status was set
+    let getRes = await request('GET', '/api/week');
+    assert.equal(getRes.body.status['李卓'][taskId], 'done');
+
+    // Delete the task
+    await request('DELETE', `/api/week/tasks/${taskId}`, { _token: token });
+
+    // Verify status entry is cleaned up
+    getRes = await request('GET', '/api/week');
+    if (getRes.body.status['李卓']) {
+      assert.equal(getRes.body.status['李卓'][taskId], undefined);
+    }
+  });
+
+  // =================== Status Tests ===================
+
+  it('PUT /api/week/tasks/:taskId/status/:member with done and NO token returns 200', async () => {
+    const token = await getToken();
+    // Create a task first
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '自行标记',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    // Member marks done without token
+    const res = await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, { status: 'done' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.status, 'done');
+  });
+
+  it('PUT /api/week/tasks/:taskId/status/:member with rejected WITHOUT token returns 401', async () => {
+    const token = await getToken();
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '拒绝测试',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    // Try to reject without token
+    const res = await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, { status: 'rejected' });
+    assert.equal(res.status, 401);
+  });
+
+  it('PUT /api/week/tasks/:taskId/status/:member with rejected WITH token returns 200', async () => {
+    const token = await getToken();
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '拒绝测试2',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    const res = await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, {
+      _token: token,
+      status: 'rejected',
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.status, 'rejected');
+  });
+
+  it('PUT /api/week/tasks/:taskId/status/:member with null WITH token returns 200', async () => {
+    const token = await getToken();
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '重置状态测试',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    // First mark done
+    await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, { status: 'done' });
+
+    // Then admin resets to null
+    const res = await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, {
+      _token: token,
+      status: null,
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.status, null);
+  });
+
+  it('PUT /api/week/tasks/:taskId/status/:member with non-existent member returns 404', async () => {
+    const token = await getToken();
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '成员不存在测试',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    const res = await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('不存在')}`, { status: 'done' });
+    assert.equal(res.status, 404);
+  });
+
+  it('PUT /api/week/tasks/9999/status/:member with non-existent taskId returns 404', async () => {
+    const res = await request('PUT', `/api/week/tasks/9999/status/${encodeURIComponent('李卓')}`, { status: 'done' });
+    assert.equal(res.status, 404);
+  });
+
+  it('After status update, GET /api/week shows the updated status', async () => {
+    const token = await getToken();
+    const createRes = await request('POST', '/api/week/tasks', {
+      _token: token,
+      name: '状态反映测试',
+      desc: '',
+    });
+    const taskId = createRes.body.task.id;
+
+    // Mark done
+    await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, { status: 'done' });
+
+    // Verify in GET
+    const getRes = await request('GET', '/api/week');
+    assert.equal(getRes.body.status['李卓'][taskId], 'done');
+  });
 });
