@@ -7,9 +7,9 @@
 
 ### Member Management
 
-- [ ] **MEMB-01**: API returns list of all team members (GET /members)
-- [ ] **MEMB-02**: Admin can add a new member by name (POST /members)
-- [ ] **MEMB-03**: Admin can delete a member by name (DELETE /members/{name})
+- [x] **MEMB-01**: API returns list of all team members (GET /members)
+- [x] **MEMB-02**: Admin can add a new member by name (POST /members)
+- [x] **MEMB-03**: Admin can delete a member by name (DELETE /members/{name})
 
 ### Weekly Data
 
@@ -31,7 +31,7 @@
 - [x] **AUTH-01**: Admin can log in with PIN and receive a token (POST /admin/login)
 - [x] **AUTH-02**: Admin can change the PIN while authenticated (PUT /admin/pin)
 - [x] **AUTH-03**: All write endpoints for admin require valid token
-- [ ] **AUTH-04**: Member write endpoints only require name parameter (no auth)
+- [x] **AUTH-04**: Member write endpoints only require name parameter (no auth)
 
 ### Infrastructure
 
@@ -68,10 +68,10 @@
 | AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 2 | Complete |
-| AUTH-04 | Phase 2 | Pending |
-| MEMB-01 | Phase 2 | Pending |
-| MEMB-02 | Phase 2 | Pending |
-| MEMB-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Complete |
+| MEMB-01 | Phase 2 | Complete |
+| MEMB-02 | Phase 2 | Complete |
+| MEMB-03 | Phase 2 | Complete |
 | WEEK-01 | Phase 3 | Pending |
 | WEEK-02 | Phase 3 | Pending |
 | WEEK-03 | Phase 3 | Pending |

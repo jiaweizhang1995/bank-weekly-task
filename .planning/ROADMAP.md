@@ -46,7 +46,7 @@ Plans:
 **Plans:** 2 plans
 Plans:
 - [x] 02-01-PLAN.md — Auth middleware, admin login, and PIN change endpoints
-- [ ] 02-02-PLAN.md — Member CRUD endpoints (list, add, delete)
+- [x] 02-02-PLAN.md — Member CRUD endpoints (list, add, delete)
 
 ### Phase 3: Weekly API
 **Goal**: All weekly data endpoints work — members can view tasks and mark completion, admin can manage tasks and settings
