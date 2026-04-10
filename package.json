@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "preview": "npm run build && node server.js"
   },
   "dependencies": {
     "express": "^5.2.1",
