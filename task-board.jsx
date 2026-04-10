@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import html2canvas from "html2canvas-pro";
 import api from './src/api.js';
 
 /* =================== Color Tokens (OKLCH Warm Linen) =================== */
@@ -43,6 +44,18 @@ function FontLoader() {
       @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Albert+Sans:wght@300;400;500;600;700&display=swap');
     `}</style>
   );
+}
+
+async function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+      reject(new Error("Canvas blob generation failed"));
+    }, "image/png", 1);
+  });
 }
 
 /* =================== App =================== */
@@ -791,6 +804,20 @@ function AdminView({ data, refreshData, onBack }) {
 function MemberView({ data, refreshData, member, onBack }) {
   const week = data.currentWeek;
   const hasTasks = week && week.tasks && week.tasks.length > 0;
+  const captureRef = useRef(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+  const [exportPreviewUrl, setExportPreviewUrl] = useState("");
+  const [exportBlob, setExportBlob] = useState(null);
+  const [exportFileName, setExportFileName] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (exportPreviewUrl) {
+        URL.revokeObjectURL(exportPreviewUrl);
+      }
+    };
+  }, [exportPreviewUrl]);
 
   const markDone = async (taskId) => {
     const st = (week.status || {})[member];
@@ -801,10 +828,53 @@ function MemberView({ data, refreshData, member, onBack }) {
     } catch (e) { console.error("Mark done failed:", e); }
   };
 
+  const handleExportBoard = async () => {
+    if (isExporting || !captureRef.current) return;
+
+    const captureNode = captureRef.current;
+
+    setIsExporting(true);
+    setExportError("");
+
+    try {
+      const width = Math.max(captureNode.scrollWidth, captureNode.offsetWidth);
+      const height = Math.max(captureNode.scrollHeight, captureNode.offsetHeight);
+      const canvas = await html2canvas(captureNode, {
+        backgroundColor: c.bg,
+        useCORS: true,
+        logging: false,
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        width,
+        height,
+        windowWidth: width,
+        windowHeight: height,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+      });
+      const blob = await canvasToBlob(canvas);
+      const fileName = `${member}-周工作看板-${new Date().toISOString().slice(0, 10)}.png`;
+      const objectUrl = URL.createObjectURL(blob);
+
+      setExportBlob(blob);
+      setExportFileName(fileName);
+      setExportPreviewUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+        return objectUrl;
+      });
+    } catch (e) {
+      console.error("Export long image failed:", e);
+      setExportError("长图生成失败，请稍后重试");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <Shell>
       <Header title={`${member} 的任务`} onBack={onBack} />
-      <div style={s.content}>
+      <div ref={captureRef} style={s.content}>
         {!hasTasks ? (
           <div style={{ ...s.card, textAlign: "center", padding: "48px 18px" }}>
             <p style={{
