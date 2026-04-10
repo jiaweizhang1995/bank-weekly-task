@@ -4,36 +4,36 @@ import api from './src/api.js';
 /* =================== Color Tokens (OKLCH Warm Linen) =================== */
 const c = {
   // Surfaces
-  bg:        "oklch(95.5% 0.012 75)",      // warm linen base
-  surface:   "oklch(98% 0.008 75)",         // card surface
-  surfaceAlt:"oklch(93% 0.015 75)",         // subtle alternate
-  overlay:   "oklch(97% 0.01 75)",          // elevated surface
+  bg: "oklch(95.5% 0.012 75)",      // warm linen base
+  surface: "oklch(98% 0.008 75)",         // card surface
+  surfaceAlt: "oklch(93% 0.015 75)",         // subtle alternate
+  overlay: "oklch(97% 0.01 75)",          // elevated surface
 
   // Text
-  text:      "oklch(22% 0.02 55)",          // deep warm charcoal
-  textSec:   "oklch(42% 0.018 55)",         // secondary
+  text: "oklch(22% 0.02 55)",          // deep warm charcoal
+  textSec: "oklch(42% 0.018 55)",         // secondary
   textMuted: "oklch(58% 0.015 60)",         // muted
   textFaint: "oklch(68% 0.012 65)",         // faint hints
 
   // Accent - terracotta/amber
-  accent:    "oklch(52% 0.14 45)",          // terracotta
-  accentSoft:"oklch(88% 0.05 50)",          // soft accent bg
-  accentHover:"oklch(48% 0.15 45)",         // hover state
+  accent: "oklch(52% 0.14 45)",          // terracotta
+  accentSoft: "oklch(88% 0.05 50)",          // soft accent bg
+  accentHover: "oklch(48% 0.15 45)",         // hover state
 
   // Semantic
-  success:   "oklch(48% 0.12 155)",         // warm green
+  success: "oklch(48% 0.12 155)",         // warm green
   successBg: "oklch(92% 0.04 155)",
-  danger:    "oklch(50% 0.16 25)",          // warm red
-  dangerBg:  "oklch(92% 0.04 25)",
-  warning:   "oklch(55% 0.14 70)",          // amber
+  danger: "oklch(50% 0.16 25)",          // warm red
+  dangerBg: "oklch(92% 0.04 25)",
+  warning: "oklch(55% 0.14 70)",          // amber
   warningBg: "oklch(93% 0.04 70)",
 
   // Borders
-  border:    "oklch(87% 0.012 70)",
+  border: "oklch(87% 0.012 70)",
   borderSub: "oklch(91% 0.008 70)",
 
   // Interactive
-  focus:     "oklch(52% 0.14 45 / 0.3)",
+  focus: "oklch(52% 0.14 45 / 0.3)",
 };
 
 /* =================== Google Fonts Loader =================== */
@@ -175,7 +175,7 @@ function Landing({ data, onSelectMember, onAdminClick }) {
           textTransform: "uppercase",
           color: c.accent,
           margin: "0 0 8px",
-        }}>平安银行顶私顾问周看板</p>
+        }}>平安银行顶私顾问</p>
         <h1 style={{
           fontFamily: "'Bricolage Grotesque', serif",
           fontSize: "clamp(1.75rem, 5vw + 0.5rem, 2.25rem)",
@@ -228,15 +228,15 @@ function Landing({ data, onSelectMember, onAdminClick }) {
                 transition: "border-color 0.2s, box-shadow 0.2s",
                 fontFamily: "'Albert Sans', sans-serif",
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = c.accent;
-                e.currentTarget.style.boxShadow = `0 2px 12px oklch(52% 0.14 45 / 0.08)`;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = c.border;
-                e.currentTarget.style.boxShadow = "none";
-              }}
-              onClick={() => onSelectMember(name)}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = c.accent;
+                  e.currentTarget.style.boxShadow = `0 2px 12px oklch(52% 0.14 45 / 0.08)`;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = c.border;
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+                onClick={() => onSelectMember(name)}
               >
                 <div style={{
                   width: 44,
@@ -287,9 +287,9 @@ function Landing({ data, onSelectMember, onAdminClick }) {
           marginTop: 24,
           transition: "border-color 0.2s, color 0.2s",
         }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.color = c.accent; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = c.borderSub; e.currentTarget.style.color = c.textFaint; }}
-        onClick={onAdminClick}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.color = c.accent; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = c.borderSub; e.currentTarget.style.color = c.textFaint; }}
+          onClick={onAdminClick}
         >
           管理后台
         </button>
@@ -491,7 +491,7 @@ function AdminView({ data, refreshData, onBack }) {
   const [announcement, setAnnouncement] = useState("");
   const [newMember, setNewMember] = useState("");
   const [newPin, setNewPin] = useState("");
-  const [saveSuccessVisible, setSaveSuccessVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const week = data.currentWeek || { tasks: [], status: {}, penalty: "", deadline: "", announcement: "" };
 
@@ -504,21 +504,21 @@ function AdminView({ data, refreshData, onBack }) {
   }, []);
 
   useEffect(() => {
-    if (!saveSuccessVisible) return undefined;
+    if (!successMessage) return undefined;
 
     const timeoutId = window.setTimeout(() => {
-      setSaveSuccessVisible(false);
+      setSuccessMessage("");
     }, 1600);
 
     return () => window.clearTimeout(timeoutId);
-  }, [saveSuccessVisible]);
+  }, [successMessage]);
 
   const publishWeek = async () => {
     try {
       await api.updateAnnouncement(announcement);
       await api.updateSettings({ deadline, penalty });
       await refreshData();
-      setSaveSuccessVisible(true);
+      setSuccessMessage("保存成功");
     } catch (e) { console.error("Publish failed:", e); }
   };
 
@@ -529,6 +529,7 @@ function AdminView({ data, refreshData, onBack }) {
       await refreshData();
       setTaskName("");
       setTaskDesc("");
+      setSuccessMessage("添加成功");
     } catch (e) { console.error("Add task failed:", e); }
   };
 
@@ -601,9 +602,9 @@ function AdminView({ data, refreshData, onBack }) {
   return (
     <Shell>
       <Header title="管理后台" onBack={onBack} />
-      {saveSuccessVisible && (
+      {successMessage && (
         <div style={s.successToastOverlay}>
-          <div style={s.successToast}>保存成功</div>
+          <div style={s.successToast}>{successMessage}</div>
         </div>
       )}
       <div style={{
@@ -652,7 +653,7 @@ function AdminView({ data, refreshData, onBack }) {
                 try {
                   await api.updateAnnouncement(announcement);
                   await refreshData();
-                  alert("通知已保存");
+                  setSuccessMessage("保存成功");
                 } catch (e) { console.error("Save announcement failed:", e); }
               }}>保存通知</button>
             </div>
