@@ -122,4 +122,12 @@ router.put('/tasks/:taskId/status/:member', (req, res) => {
   res.json({ message: '状态已更新', member, taskId, status: statusVal });
 });
 
+// POST /reset - Reset week data to defaults (admin only per WEEK-06)
+router.post('/reset', requireAdmin, (req, res) => {
+  const data = getData();
+  data.currentWeek = { tasks: [], status: {}, penalty: "", deadline: "", announcement: "" };
+  saveData(data);
+  res.json({ message: '周数据已重置' });
+});
+
 export default router;

@@ -379,4 +379,51 @@ describe('Week routes', () => {
     const getRes = await request('GET', '/api/week');
     assert.equal(getRes.body.status['李卓'][taskId], 'done');
   });
+
+  // =================== Reset Tests ===================
+
+  it('POST /api/week/reset with admin token resets all data to defaults', async () => {
+    const token = await getToken();
+    // Add some data first
+    await request('POST', '/api/week/tasks', { _token: token, name: '待重置任务', desc: '' });
+    await request('PUT', '/api/week/announcement', { _token: token, announcement: '重置前公告' });
+    await request('PUT', '/api/week/settings', { _token: token, deadline: '2026-04-15T18:00', penalty: '50元' });
+
+    // Reset
+    const res = await request('POST', '/api/week/reset', { _token: token });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.message, '周数据已重置');
+
+    // Verify everything is cleared
+    const getRes = await request('GET', '/api/week');
+    assert.deepEqual(getRes.body.tasks, []);
+    assert.deepEqual(getRes.body.status, {});
+    assert.equal(getRes.body.announcement, '');
+    assert.equal(getRes.body.deadline, '');
+    assert.equal(getRes.body.penalty, '');
+  });
+
+  it('POST /api/week/reset without token returns 401', async () => {
+    const res = await request('POST', '/api/week/reset');
+    assert.equal(res.status, 401);
+  });
+
+  it('POST /api/week/reset clears tasks, statuses, and settings completely', async () => {
+    const token = await getToken();
+    // Create task and mark done
+    const createRes = await request('POST', '/api/week/tasks', { _token: token, name: '完整重置测试', desc: '描述' });
+    const taskId = createRes.body.task.id;
+    await request('PUT', `/api/week/tasks/${taskId}/status/${encodeURIComponent('李卓')}`, { status: 'done' });
+
+    // Reset
+    await request('POST', '/api/week/reset', { _token: token });
+
+    // Verify complete reset
+    const getRes = await request('GET', '/api/week');
+    assert.deepEqual(getRes.body.tasks, []);
+    assert.deepEqual(getRes.body.status, {});
+    assert.equal(getRes.body.penalty, '');
+    assert.equal(getRes.body.deadline, '');
+    assert.equal(getRes.body.announcement, '');
+  });
 });
