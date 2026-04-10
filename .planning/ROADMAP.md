@@ -12,7 +12,7 @@ The frontend is complete. This roadmap delivers the backend API that powers it �
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Express server with JSON file persistence up and running
+- [x] **Phase 1: Foundation** - Express server with JSON file persistence up and running
 - [ ] **Phase 2: Auth & Members** - Admin authentication and member management API
 - [ ] **Phase 3: Weekly API** - All weekly data, task, and status endpoints
 - [ ] **Phase 4: Integration** - Frontend wired to API, single deployable unit ready
@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. A health-check request returns a 200 response confirming the server is alive
 **Plans:** 1 plan
 Plans:
-- [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
+- [x] 01-01-PLAN.md — Express server with JSON persistence and health check
 
 ### Phase 2: Auth & Members
 **Goal**: Admin can authenticate with a PIN and receive a token; admin can manage team members via API
@@ -63,13 +63,15 @@ Plans:
 - [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
 
 ### Phase 4: Integration
-**Goal**: Express serves the built frontend as static files, and the frontend uses the API instead of localStorage — one server, one URL, fully working app
+**Goal**: Express serves the built frontend as static files, frontend uses the API instead of localStorage, GitHub Actions CI/CD auto-deploys to Alibaba Cloud HK ECS — one server, one URL, fully working app
 **Depends on**: Phase 3
 **Requirements**: INFR-02, INFR-03
 **Success Criteria** (what must be TRUE):
   1. Visiting the server URL in a browser loads the React app without a separate dev server
   2. Selecting a member name and marking a task done persists after a browser refresh (data comes from API, not localStorage)
   3. Admin login, task management, and weekly reset all work end-to-end through the API in the browser
+  4. Pushing to main branch triggers GitHub Actions workflow that SSH deploys to ECS, pulls code, installs deps, builds frontend, and restarts pm2 process
+  5. After a push-triggered deploy, the live site reflects the new code without manual SSH
 **Plans:** 1 plan
 Plans:
 - [ ] 01-01-PLAN.md — Express server with JSON persistence and health check
@@ -82,7 +84,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/? | Not started | - |
+| 1. Foundation | 1/1 | ✓ Complete | 2026-04-10 |
 | 2. Auth & Members | 0/? | Not started | - |
 | 3. Weekly API | 0/? | Not started | - |
 | 4. Integration | 0/? | Not started | - |
