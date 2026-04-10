@@ -62,7 +62,7 @@ Plans:
 **Plans:** 2 plans
 Plans:
 - [x] 03-01-PLAN.md — Week data read, announcement, and settings endpoints
-- [ ] 03-02-PLAN.md — Task CRUD, status management, and week reset endpoints
+- [x] 03-02-PLAN.md — Task CRUD, status management, and week reset endpoints
 
 ### Phase 4: Integration
 **Goal**: Express serves the built frontend as static files, frontend uses the API instead of localStorage, GitHub Actions CI/CD auto-deploys to Alibaba Cloud HK ECS — one server, one URL, fully working app

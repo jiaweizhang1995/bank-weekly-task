@@ -16,15 +16,15 @@
 - [x] **WEEK-01**: API returns complete weekly data in one response — announcement, tasks, deadline, penalty, all members' status (GET /week)
 - [x] **WEEK-02**: Admin can update the weekly announcement (PUT /week/announcement)
 - [x] **WEEK-03**: Admin can update deadline and penalty settings (PUT /week/settings)
-- [ ] **WEEK-04**: Admin can add a new task with name and description (POST /week/tasks)
-- [ ] **WEEK-05**: Admin can delete a task by ID (DELETE /week/tasks/{taskId})
-- [ ] **WEEK-06**: Admin can reset all weekly data to start a new week (POST /week/reset)
+- [x] **WEEK-04**: Admin can add a new task with name and description (POST /week/tasks)
+- [x] **WEEK-05**: Admin can delete a task by ID (DELETE /week/tasks/{taskId})
+- [x] **WEEK-06**: Admin can reset all weekly data to start a new week (POST /week/reset)
 
 ### Task Status
 
-- [ ] **STAT-01**: Member can mark their own task as done (PUT /week/tasks/{taskId}/status/{member}, status=done)
-- [ ] **STAT-02**: Admin can reject a member's completion (status=rejected)
-- [ ] **STAT-03**: Admin can reset a member's task status back to null
+- [x] **STAT-01**: Member can mark their own task as done (PUT /week/tasks/{taskId}/status/{member}, status=done)
+- [x] **STAT-02**: Admin can reject a member's completion (status=rejected)
+- [x] **STAT-03**: Admin can reset a member's task status back to null
 
 ### Authentication
 
@@ -75,12 +75,12 @@
 | WEEK-01 | Phase 3 | Complete |
 | WEEK-02 | Phase 3 | Complete |
 | WEEK-03 | Phase 3 | Complete |
-| WEEK-04 | Phase 3 | Pending |
-| WEEK-05 | Phase 3 | Pending |
-| WEEK-06 | Phase 3 | Pending |
-| STAT-01 | Phase 3 | Pending |
-| STAT-02 | Phase 3 | Pending |
-| STAT-03 | Phase 3 | Pending |
+| WEEK-04 | Phase 3 | Complete |
+| WEEK-05 | Phase 3 | Complete |
+| WEEK-06 | Phase 3 | Complete |
+| STAT-01 | Phase 3 | Complete |
+| STAT-02 | Phase 3 | Complete |
+| STAT-03 | Phase 3 | Complete |
 | INFR-02 | Phase 4 | Pending |
 | INFR-03 | Phase 4 | Pending |
 
