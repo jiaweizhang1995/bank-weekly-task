@@ -25,15 +25,15 @@ Members can see their weekly tasks and mark them done, and the admin can manage 
 - ✓ Admin PIN change (PUT /admin/pin) — Validated in Phase 2: Auth & Members
 - ✓ Role-based access: admin via token, members via name parameter — Validated in Phase 2: Auth & Members
 - ✓ Member management endpoints (GET/POST/DELETE /members) — Validated in Phase 2: Auth & Members
+- ✓ Weekly data endpoint (GET /week) returning complete week structure — Validated in Phase 3: Weekly API
+- ✓ Announcement management (PUT /week/announcement) — Validated in Phase 3: Weekly API
+- ✓ Settings management (PUT /week/settings — deadline, penalty) — Validated in Phase 3: Weekly API
+- ✓ Task CRUD (POST/DELETE /week/tasks) — Validated in Phase 3: Weekly API
+- ✓ Task status updates with role-based logic (PUT /week/tasks/{taskId}/status/{member}) — Validated in Phase 3: Weekly API
+- ✓ Weekly reset endpoint (POST /week/reset) — Validated in Phase 3: Weekly API
 
 ### Active
 
-- [ ] Weekly data endpoint (GET /week) returning complete week structure
-- [ ] Announcement management (PUT /week/announcement)
-- [ ] Settings management (PUT /week/settings — deadline, penalty)
-- [ ] Task CRUD (POST/DELETE /week/tasks)
-- [ ] Task status updates with role-based logic (PUT /week/tasks/{taskId}/status/{member})
-- [ ] Weekly reset endpoint (POST /week/reset)
 - [ ] Express serves built frontend static files (same server deployment)
 - [ ] CORS configured for same-origin serving
 
@@ -93,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Phase 2 completion*
+*Last updated: 2026-04-11 after Phase 3 completion*
