@@ -13,9 +13,9 @@
 
 ### Weekly Data
 
-- [ ] **WEEK-01**: API returns complete weekly data in one response — announcement, tasks, deadline, penalty, all members' status (GET /week)
-- [ ] **WEEK-02**: Admin can update the weekly announcement (PUT /week/announcement)
-- [ ] **WEEK-03**: Admin can update deadline and penalty settings (PUT /week/settings)
+- [x] **WEEK-01**: API returns complete weekly data in one response — announcement, tasks, deadline, penalty, all members' status (GET /week)
+- [x] **WEEK-02**: Admin can update the weekly announcement (PUT /week/announcement)
+- [x] **WEEK-03**: Admin can update deadline and penalty settings (PUT /week/settings)
 - [ ] **WEEK-04**: Admin can add a new task with name and description (POST /week/tasks)
 - [ ] **WEEK-05**: Admin can delete a task by ID (DELETE /week/tasks/{taskId})
 - [ ] **WEEK-06**: Admin can reset all weekly data to start a new week (POST /week/reset)
@@ -72,9 +72,9 @@
 | MEMB-01 | Phase 2 | Complete |
 | MEMB-02 | Phase 2 | Complete |
 | MEMB-03 | Phase 2 | Complete |
-| WEEK-01 | Phase 3 | Pending |
-| WEEK-02 | Phase 3 | Pending |
-| WEEK-03 | Phase 3 | Pending |
+| WEEK-01 | Phase 3 | Complete |
+| WEEK-02 | Phase 3 | Complete |
+| WEEK-03 | Phase 3 | Complete |
 | WEEK-04 | Phase 3 | Pending |
 | WEEK-05 | Phase 3 | Pending |
 | WEEK-06 | Phase 3 | Pending |
