@@ -18,6 +18,6 @@ jobs:
           script: |
             cd /var/www/bank-weekly-task
             git pull origin main
-            npm install --production
+            npm install
             npm run build
             pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
