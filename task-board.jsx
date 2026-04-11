@@ -356,70 +356,7 @@ function Landing({ data, onSelectMember, onAdminClick }) {
           padding: "40px 24px 32px",
           textAlign: "left",
           borderBottom: `1px solid ${c.border}`,
-          position: "relative",
         }}>
-          <div
-            data-html2canvas-ignore="true"
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-            }}
-          >
-            <button
-              type="button"
-              aria-label="打开操作菜单"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((open) => !open)}
-              style={s.headerMenuButton}
-            >
-              ☰
-            </button>
-            {menuOpen && (
-              <>
-                <button
-                  type="button"
-                  aria-label="关闭操作菜单"
-                  onClick={() => setMenuOpen(false)}
-                  style={s.headerMenuBackdrop}
-                />
-                <div style={{ ...s.headerMenuPanel, top: 52, right: 0 }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onAdminClick();
-                    }}
-                    style={s.headerMenuItem}
-                    onMouseEnter={e => { e.currentTarget.style.background = c.surfaceAlt; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-                  >
-                    管理后台
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      if (!isExporting && hasTasks) {
-                        handleExportBoard();
-                      }
-                    }}
-                    disabled={isExporting || !hasTasks}
-                    style={{
-                      ...s.headerMenuItem,
-                      color: isExporting || !hasTasks ? c.textFaint : c.text,
-                      cursor: isExporting || !hasTasks ? "not-allowed" : "pointer",
-                    }}
-                    onMouseEnter={e => { if (!isExporting && hasTasks) e.currentTarget.style.background = c.surfaceAlt; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-                  >
-                    {isExporting ? "生成中..." : "导出为长图"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
           <p style={{
             fontFamily: "'Albert Sans', sans-serif",
             fontSize: "0.75rem",
@@ -429,14 +366,81 @@ function Landing({ data, onSelectMember, onAdminClick }) {
             color: c.accent,
             margin: "0 0 8px",
           }}>平安银行顶私顾问</p>
-          <h1 style={{
-            fontFamily: "'Bricolage Grotesque', serif",
-            fontSize: "clamp(1.75rem, 5vw + 0.5rem, 2.25rem)",
-            fontWeight: 800,
-            color: c.text,
-            margin: 0,
-            lineHeight: 1.15,
-          }}>周工作看板</h1>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+          }}>
+            <h1 style={{
+              fontFamily: "'Bricolage Grotesque', serif",
+              fontSize: "clamp(1.75rem, 5vw + 0.5rem, 2.25rem)",
+              fontWeight: 800,
+              color: c.text,
+              margin: 0,
+              lineHeight: 1.15,
+            }}>周工作看板</h1>
+            <div
+              data-html2canvas-ignore="true"
+              style={{
+                position: "relative",
+                flexShrink: 0,
+              }}
+            >
+              <button
+                type="button"
+                aria-label="打开操作菜单"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((open) => !open)}
+                style={s.headerMenuButton}
+              >
+                ☰
+              </button>
+              {menuOpen && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="关闭操作菜单"
+                    onClick={() => setMenuOpen(false)}
+                    style={s.headerMenuBackdrop}
+                  />
+                  <div style={{ ...s.headerMenuPanel, top: 52, right: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onAdminClick();
+                      }}
+                      style={s.headerMenuItem}
+                      onMouseEnter={e => { e.currentTarget.style.background = c.surfaceAlt; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      管理后台
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        if (!isExporting && hasTasks) {
+                          handleExportBoard();
+                        }
+                      }}
+                      disabled={isExporting || !hasTasks}
+                      style={{
+                        ...s.headerMenuItem,
+                        color: isExporting || !hasTasks ? c.textFaint : c.text,
+                        cursor: isExporting || !hasTasks ? "not-allowed" : "pointer",
+                      }}
+                      onMouseEnter={e => { if (!isExporting && hasTasks) e.currentTarget.style.background = c.surfaceAlt; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      {isExporting ? "生成中..." : "导出为长图"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
           <p style={{
             fontFamily: "'Albert Sans', sans-serif",
             fontSize: "0.8125rem",
