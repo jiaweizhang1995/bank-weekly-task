@@ -1,0 +1,40 @@
+name: Notify ops-hub
+# 推到 main 后, 用 HMAC-SHA256 签名 GitHub push payload,
+# 通过 Host header 转发到 Tencent 服务器上的 adnanh/webhook.
+#
+# Tencent: deploy.dscenter.work → 43.131.233.151 (DNS 待 user 加 A 记录;
+#   暂用 Host header workaround, 加完 DNS 后可改回纯 hostname).
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST signed GitHub payload to ops-hub webhook
+        env:
+          SECRET: ${{ secrets.OPS_HUB_WEBHOOK_SECRET }}
+        run: |
+          set -e
+          # 构造 GitHub 风格 push payload (webhook 解析 ref + head_commit.id)
+          PAYLOAD=$(jq -n \
+            --arg ref "${GITHUB_REF}" \
+            --arg sha "${GITHUB_SHA}" \
+            --arg repo "${GITHUB_REPOSITORY}" \
+            '{ref:$ref, head_commit:{id:$sha}, repository:{full_name:$repo}}')
+          SIG="sha256=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $2}')"
+
+          # 域名 (DNS 没就用 Host header workaround)
+          IP=43.131.233.151
+          HOST=deploy.dscenter.work
+          curl -fsS --max-time 10 \
+            -H "Host: ${HOST}" \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -H "X-Hub-Signature-256: ${SIG}" \
+            -X POST \
+            --data "$PAYLOAD" \
+            "http://${IP}/hooks/bank-weekly-task"
+          echo "✓ webhook posted"
