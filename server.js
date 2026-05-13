@@ -5,6 +5,7 @@ import { loadData, getData } from './data/store.js';
 import adminRoutes from './routes/admin.js';
 import memberRoutes from './routes/members.js';
 import weekRoutes from './routes/week.js';
+import exportRoutes from './routes/export.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/admin', adminRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/week', weekRoutes);
+app.use('/api/export', exportRoutes);
 
 // SPA fallback — send index.html for any non-API route
 app.get('/{*splat}', (req, res) => {

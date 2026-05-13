@@ -301,6 +301,22 @@ function Landing({ data, onSelectMember, onAdminClick }) {
   const hasTasks = week && week.tasks && week.tasks.length > 0;
   const captureRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const isExportMode = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("export") === "1";
+
+  useEffect(() => {
+    if (!isExportMode) return;
+    let cancelled = false;
+    const signal = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      } catch {}
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      if (!cancelled) document.body.dataset.exportReady = "1";
+    };
+    signal();
+    return () => { cancelled = true; };
+  }, [isExportMode]);
   const {
     isExporting,
     exportError,
@@ -380,6 +396,7 @@ function Landing({ data, onSelectMember, onAdminClick }) {
               margin: 0,
               lineHeight: 1.15,
             }}>周工作看板</h1>
+            {!isExportMode && (
             <div
               data-html2canvas-ignore="true"
               style={{
@@ -440,6 +457,7 @@ function Landing({ data, onSelectMember, onAdminClick }) {
                 </>
               )}
             </div>
+            )}
           </div>
           <p style={{
             fontFamily: "'Albert Sans', sans-serif",
